@@ -29,6 +29,15 @@ from health_agent.paths import (
     state_path,
 )
 from health_agent.profile import load_profile_context
+from health_agent.selfdecode import (
+    fetch_selfdecode_genotypes,
+    genotype_cache_path,
+    load_genotype_cache,
+    normalize_rsids,
+    profile_selfdecode_config,
+    resolve_selfdecode_token,
+    update_genotype_cache,
+)
 
 
 def _utc_now() -> str:
@@ -226,6 +235,67 @@ def run_daily_plan(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_selfdecode_genotypes(args: argparse.Namespace) -> int:
+    repo_root = args.repo_root.resolve()
+    profile_context = load_profile_context(args.profile, home_dir=args.home_dir)
+    ensure_repo_dirs(repo_root, profile_context.slug)
+
+    rsids = normalize_rsids(args.rsids)
+    if not rsids:
+        raise ValidationError("Provide at least one rsID with --rsids.")
+
+    cache_path = genotype_cache_path(repo_root, profile_context.slug)
+    cache = load_genotype_cache(cache_path)
+    cached_items = cache.get("items", {})
+    missing = [
+        rsid
+        for rsid in rsids
+        if args.refresh or rsid not in cached_items
+    ]
+
+    if missing:
+        token = resolve_selfdecode_token(profile_context, args.jwt_token)
+        if not token:
+            raise ValidationError(
+                "SelfDecode JWT token is required for uncached rsIDs: "
+                f"{', '.join(missing)}. Pass --jwt-token or set SELFDECODE_JWT."
+            )
+        selfdecode = profile_selfdecode_config(profile_context)
+        profile_id = selfdecode.get("profile_id", "")
+        try:
+            fetched = fetch_selfdecode_genotypes(
+                profile_id=profile_id,
+                rsids=missing,
+                jwt_token=token,
+            )
+        except (RuntimeError, ValueError) as exc:
+            raise ValidationError(str(exc)) from exc
+        update_genotype_cache(
+            repo_root=repo_root,
+            profile_context=profile_context,
+            fetched_items=fetched,
+        )
+        cache = load_genotype_cache(cache_path)
+        cached_items = cache.get("items", {})
+
+    print("rsid\tgenotype\tstatus\tvariant_ids\tcached_at")
+    for rsid in rsids:
+        item = cached_items.get(rsid, {})
+        print(
+            "\t".join(
+                [
+                    rsid,
+                    item.get("genotype", "NO_RESULT"),
+                    item.get("status", "missing"),
+                    ",".join(item.get("variant_ids", [])),
+                    item.get("fetched_at", ""),
+                ]
+            )
+        )
+    print(f"cache\t{cache_path}")
+    return 0
+
+
 def _run_deprecated_alias(args: argparse.Namespace, alias: str) -> int:
     message = (
         f"warning: `health-agent {alias}` is deprecated; use "
@@ -322,6 +392,28 @@ def build_parser() -> argparse.ArgumentParser:
         help="Target date for the draft plan in YYYY-MM-DD format. Defaults to today.",
     )
     daily_plan.set_defaults(func=run_daily_plan)
+
+    selfdecode = subparsers.add_parser(
+        "selfdecode-genotypes",
+        help="Fetch SelfDecode genotypes by rsID and cache them under .state/.",
+    )
+    _add_profile_argument(selfdecode)
+    selfdecode.add_argument(
+        "--rsids",
+        nargs="+",
+        required=True,
+        help="One or more rsIDs. Comma-separated values are also accepted.",
+    )
+    selfdecode.add_argument(
+        "--jwt-token",
+        help="SelfDecode service JWT. If omitted, SELFDECODE_JWT is used.",
+    )
+    selfdecode.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Refresh requested rsIDs from SelfDecode even if cached.",
+    )
+    selfdecode.set_defaults(func=run_selfdecode_genotypes)
 
     intake = subparsers.add_parser(
         "intake",

@@ -54,8 +54,16 @@ python3 -m health_agent evidence-packet --profile <profile-name>
    - optionally create `.state/profiles/{profile_slug}/issues.json`, `.state/profiles/{profile_slug}/actions.json`, and `.state/profiles/{profile_slug}/sources.json` after the reasoning is complete
    - do not stop just because repo-local state is empty
 7. Pull older landmark findings only when they still change the current plan.
-8. Do not detour into a broad historical reread unless the current evidence packet and current issue memory are too thin to rank next actions.
-9. Use the built-in repo helper only as internal support when it reduces deterministic file work:
+8. For SelfDecode SNP lookups, check `.state/profiles/{profile_slug}/selfdecode-genotypes.json` first and fetch missing rsIDs with the cache-aware helper:
+
+```bash
+python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+SELFDECODE_JWT="<token>" python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+```
+
+If authentication is needed, tell the user to copy the `token` field from the `/service/health-analysis/accounts/user/token/` Network response on a logged-in SelfDecode SNP page. Never store JWTs; the helper caches genotypes only.
+9. Do not detour into a broad historical reread unless the current evidence packet and current issue memory are too thin to rank next actions.
+10. Use the built-in repo helper only as internal support when it reduces deterministic file work:
 
 ```bash
 health-agent plan --profile <profile-name>

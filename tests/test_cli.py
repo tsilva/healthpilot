@@ -20,6 +20,7 @@ def _write_profile(
     lifestyle_sources: bool = False,
     missing_lifestyle_source: str | None = None,
     unreadable_lifestyle_source: str | None = None,
+    selfdecode: bool = False,
 ) -> dict[str, Path]:
     config_dir = home_dir / ".config" / "health-agent" / "profiles"
     config_dir.mkdir(parents=True, exist_ok=True)
@@ -114,6 +115,13 @@ def _write_profile(
     lifestyle_profile_fields = ""
     for field, path in lifestyle_paths.items():
         lifestyle_profile_fields += f'  {field}: "{path}"\n'
+    selfdecode_profile_fields = ""
+    if selfdecode:
+        selfdecode_profile_fields = """
+  selfdecode:
+    enabled: true
+    profile_id: "profile-123"
+"""
 
     profile = f"""
 name: "{display_name}"
@@ -127,6 +135,7 @@ data_sources:
   health_log_path: "{health_log_dir}"
   genetics_23andme_path: "{genetics_file}"
 {lifestyle_profile_fields.rstrip()}
+{selfdecode_profile_fields.rstrip()}
 """
     (config_dir / f"{slug}.yaml").write_text(profile.strip() + "\n", encoding="utf-8")
     return {
@@ -137,6 +146,20 @@ data_sources:
         "genetics_file": genetics_file,
         **lifestyle_paths,
     }
+
+
+class _FakeHTTPResponse:
+    def __init__(self, payload: list[dict]) -> None:
+        self._payload = payload
+
+    def __enter__(self) -> "_FakeHTTPResponse":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return json.dumps(self._payload).encode("utf-8")
 
 
 def _issue_payload(
@@ -365,6 +388,108 @@ def test_evidence_packet_creates_factual_packet_from_all_sources(tmp_path: Path)
         "magnesium supplement" in item["text"]
         for item in packet["health_log"]["medication_supplement_mentions_needing_review"]
     )
+
+
+def test_selfdecode_genotypes_uses_cache_without_token(tmp_path: Path, capsys) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    home_dir = tmp_path / "home"
+    _write_profile(home_dir, selfdecode=True)
+    cache_path = repo_root / ".state" / "profiles" / "test-user" / "selfdecode-genotypes.json"
+    _write_json(
+        cache_path,
+        {
+            "profile_slug": "test-user",
+            "profile_name": "Test User",
+            "source": "selfdecode",
+            "updated_at": "2026-04-15T00:00:00Z",
+            "items": {
+                "rs123": {
+                    "rsid": "rs123",
+                    "status": "available",
+                    "genotype": "AA",
+                    "genotypes": ["A", "A"],
+                    "variant_ids": ["ref", "ref"],
+                    "profile_id": "profile-123",
+                    "source": "selfdecode",
+                    "fetched_at": "2026-04-15T00:00:00Z",
+                }
+            },
+        },
+    )
+
+    exit_code = main(
+        [
+            "--repo-root",
+            str(repo_root),
+            "--home-dir",
+            str(home_dir),
+            "selfdecode-genotypes",
+            "--profile",
+            "test-user",
+            "--rsids",
+            "rs123",
+        ]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "rs123\tAA\tavailable\tref,ref\t2026-04-15T00:00:00Z" in out
+
+
+def test_selfdecode_genotypes_fetches_and_caches_missing_rsids(
+    tmp_path: Path,
+    monkeypatch,
+    capsys,
+) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    home_dir = tmp_path / "home"
+    _write_profile(home_dir, selfdecode=True)
+
+    def fake_urlopen(request, timeout):
+        assert timeout == 30
+        assert request.headers["Authorization"] == "JWT token-123"
+        assert "profile_id=profile-123" in request.full_url
+        assert "rsid=rs456" in request.full_url
+        return _FakeHTTPResponse(
+            [
+                {
+                    "profile_id": "profile-123",
+                    "rsid": "rs456",
+                    "genotypes": ["G", "G"],
+                    "variant_ids": ["ref", "ref"],
+                }
+            ]
+        )
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    monkeypatch.setenv("SELFDECODE_JWT", "JWT token-123")
+
+    exit_code = main(
+        [
+            "--repo-root",
+            str(repo_root),
+            "--home-dir",
+            str(home_dir),
+            "selfdecode-genotypes",
+            "--profile",
+            "test-user",
+            "--rsids",
+            "rs456",
+        ]
+    )
+
+    assert exit_code == 0
+    out = capsys.readouterr().out
+    assert "rs456\tGG\tavailable\tref,ref\t" in out
+    cache = json.loads(
+        (repo_root / ".state" / "profiles" / "test-user" / "selfdecode-genotypes.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert cache["items"]["rs456"]["genotype"] == "GG"
+    assert "token-123" not in json.dumps(cache)
 
 
 def test_evidence_packet_detects_changed_files_since_last_run(tmp_path: Path) -> None:

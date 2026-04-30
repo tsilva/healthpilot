@@ -314,6 +314,26 @@ grep -E "^(rs123|rs456|rs789)" "{genetics_23andme_path}"
 ```
 
 - Use optional SelfDecode only if the selected profile enables it and the task requires imputed coverage beyond raw 23andMe data.
+- For SelfDecode lookups, use repo-local caching so fetched SNPs remain available after authentication expires:
+
+```bash
+SELFDECODE_JWT="<token>" python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+```
+
+- Cached SelfDecode genotype data lives at `.state/profiles/{profile_slug}/selfdecode-genotypes.json`.
+- Cache genotypes only. Never write JWTs or authorization headers to `.state/`, `.output/`, docs, tests, or profile files.
+- If a required rsID is already cached, use the cache even when no SelfDecode token is available.
+- If an uncached SelfDecode lookup is necessary, ask the user for the service token with these exact steps:
+  1. Log in to SelfDecode.
+  2. Open a SNP page, for example `https://selfdecode.com/app/snp/rs429358`.
+  3. Open DevTools -> Network and enable Preserve log.
+  4. Refresh the SNP page.
+  5. Filter Network requests for `user/token`.
+  6. Open `/service/health-analysis/accounts/user/token/`.
+  7. Copy the JSON response field named `token`, not an OpenID/Auth0 `authorization` header.
+  8. Pass it as `SELFDECODE_JWT="<token>"` or `--jwt-token "<token>"`.
+- SelfDecode API calls must use `Authorization: JWT <token>` against `https://selfdecode.com/service/health-analysis/...`; `Bearer <token>` returns deprecated-endpoint errors.
 
 ### Lifestyle Markdown Data
 
@@ -388,8 +408,9 @@ Then cross-check against `all.csv` and any relevant standalone exam data.
 ### Genetics And Pharmacogenomics
 
 1. Query the raw 23andMe file first.
-2. Use SelfDecode only when enabled and necessary.
-3. State clearly if the genetics source is missing or unreadable.
+2. Check `.state/profiles/{profile_slug}/selfdecode-genotypes.json` before asking for SelfDecode authentication.
+3. Use SelfDecode only when enabled and necessary; fetch through `python3 -m health_agent selfdecode-genotypes` so results are cached.
+4. State clearly if the genetics source is missing or unreadable.
 
 ### Root-Cause Investigation
 

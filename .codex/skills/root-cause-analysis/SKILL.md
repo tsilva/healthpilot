@@ -46,7 +46,14 @@ python3 -m health_agent evidence-packet --profile <profile-name>
    - use `{labs_path}/lab_specs.json` for marker naming, units, and ranges when present
    - inspect dated folders only for source verification or ambiguous OCR/parser details
 6. Search standalone exams first for imaging, endoscopy, procedure, sleep-study, pathology, or specialist-test evidence.
-7. Use genetics only when it could materially change the ranked hypotheses or medication/treatment-path interpretation.
+7. Use genetics only when it could materially change the ranked hypotheses or medication/treatment-path interpretation. For SelfDecode SNPs, check `.state/profiles/{profile_slug}/selfdecode-genotypes.json` first, then use the cache-aware helper only for missing rsIDs:
+
+```bash
+python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+SELFDECODE_JWT="<token>" python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+```
+
+If authentication is needed, tell the user to copy the `token` field from the `/service/health-analysis/accounts/user/token/` Network response on a logged-in SelfDecode SNP page. Do not ask for the OpenID/Auth0 authorization header. Never store JWTs; the helper caches genotypes only.
 8. Use lifestyle Markdown sources when schedule, food, exercise, sleep, recovery, triggers, or constraints could explain the query.
 9. If a configured source is unavailable, say so in the report and reduce confidence accordingly.
 

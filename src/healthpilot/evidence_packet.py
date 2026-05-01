@@ -69,6 +69,17 @@ MEDICATION_SIGNAL_TERMS = (
     "carnitine",
 )
 
+CURRENT_STACK_HEADING_RE = re.compile(
+    r"\b("
+    r"current\s+(medication|medicine|supplement|medication\s*/\s*supplement)"
+    r".{0,40}(stack|update|list)"
+    r"|my\s+(medication|medicine|supplement).{0,30}(stack|list)\s+is\s+currently"
+    r")\b",
+    re.IGNORECASE,
+)
+
+DATE_HEADING_RE = re.compile(r"^#{1,6}\s+\d{4}[-/]\d{2}[-/]\d{2}\b")
+
 
 def evidence_packet_path(repo_root: Path, profile_slug: str) -> Path:
     return profiles_state_path(repo_root, profile_slug, "evidence-packet.json")
@@ -307,6 +318,89 @@ def _matching_lines(path: Path, terms: tuple[str, ...], *, limit: int = MAX_SIGN
     return matches
 
 
+def _strip_markdown_emphasis(value: str) -> str:
+    return re.sub(r"[*_`]+", "", value).strip()
+
+
+def _stack_heading_text(value: str) -> str:
+    cleaned = re.sub(r"^\s*(?:#{1,6}\s+|[-*+]|\d+[.)])\s*", "", value)
+    return _strip_markdown_emphasis(cleaned).rstrip(":")
+
+
+def _markdown_list_item_text(value: str) -> str | None:
+    match = re.match(r"^\s*(?:[-*+]|\d+[.)])\s+(?P<text>.+?)\s*$", value)
+    if not match:
+        return None
+    return _strip_markdown_emphasis(match.group("text"))
+
+
+def _extract_current_stack_blocks(path: Path, *, limit: int = 3) -> list[dict[str, Any]]:
+    blocks: list[dict[str, Any]] = []
+    lines = _read_text_lines(path, max_lines=2000)
+    for line_index, line in enumerate(lines):
+        heading = _clean(line)
+        if not heading or not CURRENT_STACK_HEADING_RE.search(heading):
+            continue
+
+        items: list[dict[str, Any]] = []
+        for item_index, candidate in enumerate(lines[line_index + 1 : line_index + 41], start=line_index + 2):
+            stripped = candidate.strip()
+            if not stripped:
+                if items:
+                    break
+                continue
+            if DATE_HEADING_RE.match(stripped) or (
+                stripped.startswith("#") and items
+            ):
+                break
+            if CURRENT_STACK_HEADING_RE.search(stripped) and items:
+                break
+
+            item_text = _markdown_list_item_text(candidate)
+            if item_text is None:
+                if items:
+                    break
+                continue
+            if CURRENT_STACK_HEADING_RE.search(item_text):
+                continue
+            items.append(
+                {
+                    "path": str(path),
+                    "line": item_index,
+                    "text": _clean(item_text),
+                }
+            )
+
+        if items:
+            blocks.append(
+                {
+                    "path": str(path),
+                    "line": line_index + 1,
+                    "heading": _stack_heading_text(heading),
+                    "items": items,
+                }
+            )
+            if len(blocks) >= limit:
+                break
+    return blocks
+
+
+def _dedupe_current_stack_blocks(blocks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    deduped: list[dict[str, Any]] = []
+    seen: set[tuple[str, ...]] = set()
+    for block in blocks:
+        key = tuple(
+            str(item.get("text", "")).strip().lower()
+            for item in block.get("items", [])
+            if item.get("text")
+        )
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(block)
+    return deduped
+
+
 def _recent_markdown_files(path: Path, pattern: str, *, limit: int = 8) -> list[Path]:
     try:
         files = sorted(path.glob(pattern))
@@ -328,13 +422,18 @@ def _summarize_health_log(source_snapshot: dict[str, Any]) -> dict[str, Any]:
     signal_files = processed_files + raw_files
     unresolved_signals: list[dict[str, Any]] = []
     medication_mentions: list[dict[str, Any]] = []
+    current_stack_blocks: list[dict[str, Any]] = []
+    if health_log_path.exists():
+        current_stack_blocks.extend(_extract_current_stack_blocks(health_log_path, limit=2))
     for path in signal_files:
         unresolved_signals.extend(_matching_lines(path, SYMPTOM_SIGNAL_TERMS, limit=4))
         medication_mentions.extend(_matching_lines(path, MEDICATION_SIGNAL_TERMS, limit=4))
+        current_stack_blocks.extend(_extract_current_stack_blocks(path, limit=1))
 
     overview_signals = []
     if health_log_path.exists():
         overview_signals = _matching_lines(health_log_path, SYMPTOM_SIGNAL_TERMS, limit=8)
+        medication_mentions.extend(_matching_lines(health_log_path, MEDICATION_SIGNAL_TERMS, limit=8))
 
     return {
         "status": "available",
@@ -346,6 +445,9 @@ def _summarize_health_log(source_snapshot: dict[str, Any]) -> dict[str, Any]:
         "unresolved_symptom_or_treatment_signal_lines": (unresolved_signals + overview_signals)[
             :MAX_SIGNAL_LINES
         ],
+        "current_medication_supplement_stack": _dedupe_current_stack_blocks(
+            current_stack_blocks
+        )[:3],
         "medication_supplement_mentions_needing_review": medication_mentions[:MAX_SIGNAL_LINES],
     }
 

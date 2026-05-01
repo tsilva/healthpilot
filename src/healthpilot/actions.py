@@ -219,15 +219,44 @@ def _current_active_condition_lines(issues: dict[str, dict[str, Any]]) -> list[s
 
 
 def _current_medication_stack_lines(evidence_packet: dict[str, Any] | None) -> list[str]:
-    mentions = (
-        (evidence_packet or {})
-        .get("health_log", {})
-        .get("medication_supplement_mentions_needing_review", [])
-    )
+    health_log = (evidence_packet or {}).get("health_log", {})
+    current_stack = health_log.get("current_medication_supplement_stack", [])
+    if current_stack:
+        lines = [
+            "- Current stack extracted from explicit health-log stack section; reconcile if newer entries changed it."
+        ]
+        for block in current_stack[:2]:
+            location = block.get("path", "")
+            line_number = block.get("line")
+            heading = block.get("heading", "Current medication/supplement stack")
+            if location and line_number:
+                heading = f"{heading} ({location}:{line_number})"
+            elif location:
+                heading = f"{heading} ({location})"
+            lines.append(f"- {heading}:")
+            for item in block.get("items", [])[:12]:
+                text = item.get("text", "Medication/supplement item captured.")
+                item_line = item.get("line")
+                item_location = item.get("path", location)
+                suffix = (
+                    f" ({item_location}:{item_line})"
+                    if item_location and item_line
+                    else ""
+                )
+                lines.append(f"- {text}{suffix}")
+        return lines
+
+    mentions = health_log.get("medication_supplement_mentions_needing_review", [])
     if not mentions:
+        health_log_status = health_log.get("status")
+        if health_log_status and health_log_status != "available":
+            return [
+                "- Current medication or supplement stack could not be extracted because "
+                f"`health_log_path` is {health_log_status} in the live profile."
+            ]
         return [
             "- No current medication or supplement stack was captured in the "
-            "deterministic evidence packet; verify against recent health-log entries."
+            "deterministic evidence packet; verify whether the health log has an explicit current-stack section."
         ]
 
     lines = [
@@ -260,11 +289,27 @@ def render_plan_report(
         f"Report generated: {generated_at}",
         f"Profile: `{profile_slug}`",
         "",
-        "## Current Status Summary",
-        "",
-        "### Current Active Conditions",
+        "## Source Status",
         "",
     ]
+    for source_name, metadata in source_status.items():
+        sample = metadata.get("sample", [])
+        sample_suffix = f" (sample: {', '.join(sample)})" if sample else ""
+        path = metadata.get("path", "")
+        path_suffix = f" - `{path}`" if path else ""
+        lines.append(
+            f"- `{source_name}`: {metadata.get('status', 'unknown')}{path_suffix}{sample_suffix}"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Current Status Summary",
+            "",
+            "### Current Active Conditions",
+            "",
+        ]
+    )
     lines.extend(_current_active_condition_lines(issues))
     lines.extend(
         [
@@ -274,21 +319,6 @@ def render_plan_report(
         ]
     )
     lines.extend(_current_medication_stack_lines(evidence_packet))
-    lines.extend(
-        [
-            "",
-            "## Source Status",
-            "",
-        ]
-    )
-    for source_name, metadata in source_status.items():
-        sample = metadata.get("sample", [])
-        sample_suffix = f" (sample: {', '.join(sample)})" if sample else ""
-        path = metadata.get("path", "")
-        path_suffix = f" - `{path}`" if path else ""
-        lines.append(
-            f"- `{source_name}`: {metadata.get('status', 'unknown')}{path_suffix}{sample_suffix}"
-        )
 
     lines.extend(["", "## Current Evidence Snapshot", ""])
     for source_name, metadata in source_status.items():

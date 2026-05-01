@@ -283,7 +283,7 @@ def test_plan_creates_per_profile_state_and_report_on_first_run(tmp_path: Path) 
 
     report = next((repo_root / ".output" / "test-user").glob("????-??-??-test-user-action-plan.md"))
     report_text = report.read_text(encoding="utf-8")
-    assert report_text.index("## Current Status Summary") < report_text.index("## Source Status")
+    assert report_text.index("## Source Status") < report_text.index("## Current Status Summary")
     assert "### Current Active Conditions" in report_text
     assert "### Current Medication / Supplement Stack" in report_text
     assert "No active or monitoring conditions are currently tracked in issue state." in report_text
@@ -401,6 +401,56 @@ def test_evidence_packet_creates_factual_packet_from_all_sources(tmp_path: Path)
         "magnesium supplement" in item["text"]
         for item in packet["health_log"]["medication_supplement_mentions_needing_review"]
     )
+
+
+def test_plan_extracts_current_stack_from_health_log_overview(tmp_path: Path) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    home_dir = tmp_path / "home"
+    paths = _write_profile(home_dir)
+    (paths["health_log_dir"] / "health_log.md").write_text(
+        "# 2026-04-15\n\n"
+        "## Journal\n\n"
+        "- Current supplement stack:\n"
+        "    - **Venex 900mg** 2x daily, w/ breakfast and dinner\n"
+        "    - **Psyllium 10g** daily, before dinner\n"
+        "    - **Pea protein powder 10g** daily, w/ breakfast\n\n"
+        "# 2026-04-06\n\n"
+        "- Older note.\n",
+        encoding="utf-8",
+    )
+
+    exit_code = main(
+        [
+            "--repo-root",
+            str(repo_root),
+            "--home-dir",
+            str(home_dir),
+            "plan",
+            "--profile",
+            "test-user",
+        ]
+    )
+
+    assert exit_code == 0
+    packet = json.loads(
+        (repo_root / ".state" / "profiles" / "test-user" / "evidence-packet.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    stack_blocks = packet["health_log"]["current_medication_supplement_stack"]
+    assert stack_blocks[0]["heading"] == "Current supplement stack"
+    assert [item["text"] for item in stack_blocks[0]["items"]] == [
+        "Venex 900mg 2x daily, w/ breakfast and dinner",
+        "Psyllium 10g daily, before dinner",
+        "Pea protein powder 10g daily, w/ breakfast",
+    ]
+
+    report = next((repo_root / ".output" / "test-user").glob("????-??-??-test-user-action-plan.md"))
+    report_text = report.read_text(encoding="utf-8")
+    assert "Current stack extracted from explicit health-log stack section" in report_text
+    assert "Venex 900mg 2x daily, w/ breakfast and dinner" in report_text
+    assert "No current medication or supplement stack was captured" not in report_text
 
 
 def test_selfdecode_genotypes_uses_cache_without_token(tmp_path: Path, capsys) -> None:

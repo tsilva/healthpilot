@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "health-agent"
+name = "healthpilot"
 version = "0.1.0"
 description = "Local file-based workflows for unresolved health issue tracking and action planning."
 readme = "README.md"
@@ -18,7 +18,7 @@ dev = [
 ]
 
 [project.scripts]
-health-agent = "health_agent.cli:main"
+healthpilot = "healthpilot.cli:main"
 
 [tool.pytest.ini_options]
 pythonpath = [

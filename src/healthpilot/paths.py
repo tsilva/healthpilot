@@ -30,7 +30,7 @@ def profile_output_path(repo_root: Path, profile_slug: str, *parts: str) -> Path
 
 
 def profiles_dir(home_dir: Path) -> Path:
-    return home_dir.joinpath(".config", "health-agent", "profiles")
+    return home_dir.joinpath(".config", "healthpilot", "profiles")
 
 
 def ensure_repo_dirs(repo_root: Path, profile_slug: str) -> None:

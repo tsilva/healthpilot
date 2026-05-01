@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from health_agent.paths import expand_home
+from healthpilot.paths import expand_home
 
 
 LIFESTYLE_SOURCE_FIELDS = {

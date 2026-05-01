@@ -1,6 +1,6 @@
 ---
 name: root-cause-analysis
-description: Generate a dated root-cause differential report for a selected live health-agent profile. Use when the user asks for the most likely causes of a symptom, condition, abnormal marker, episode, pattern, or health problem, especially when they want top-K hypotheses with explicit probabilities that add to 100% and explanations for each probability.
+description: Generate a dated root-cause differential report for a selected live healthpilot profile. Use when the user asks for the most likely causes of a symptom, condition, abnormal marker, episode, pattern, or health problem, especially when they want top-K hypotheses with explicit probabilities that add to 100% and explanations for each probability.
 ---
 
 # Root Cause Analysis
@@ -32,8 +32,8 @@ Use the shortest path that can defensibly cover all relevant data types.
 2. Generate or read the current evidence packet when available:
 
 ```bash
-health-agent evidence-packet --profile <profile-name>
-python3 -m health_agent evidence-packet --profile <profile-name>
+healthpilot evidence-packet --profile <profile-name>
+python3 -m healthpilot evidence-packet --profile <profile-name>
 ```
 
 3. Use `.state/profiles/{profile_slug}/evidence-packet.json` as a factual map, not as final reasoning.
@@ -49,8 +49,8 @@ python3 -m health_agent evidence-packet --profile <profile-name>
 7. Use genetics only when it could materially change the ranked hypotheses or medication/treatment-path interpretation. For SelfDecode SNPs, check `.state/profiles/{profile_slug}/selfdecode-genotypes.json` first, then use the cache-aware helper only for missing rsIDs:
 
 ```bash
-python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
-SELFDECODE_JWT="<token>" python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+python3 -m healthpilot selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+SELFDECODE_JWT="<token>" python3 -m healthpilot selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
 ```
 
 If authentication is needed, tell the user to copy the `token` field from the `/service/health-analysis/accounts/user/token/` Network response on a logged-in SelfDecode SNP page. Do not ask for the OpenID/Auth0 authorization header. Never store JWTs; the helper caches genotypes only.

@@ -11,9 +11,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from health_agent.jsonio import load_json, write_json
-from health_agent.paths import profiles_state_path
-from health_agent.profile import ProfileContext
+from healthpilot.jsonio import load_json, write_json
+from healthpilot.paths import profiles_state_path
+from healthpilot.profile import ProfileContext
 
 SELFDECODE_BASE_URL = "https://selfdecode.com"
 

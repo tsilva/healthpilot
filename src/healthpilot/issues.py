@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from health_agent.constants import (
+from healthpilot.constants import (
     CONFIDENCE_FRAMES,
     ISSUE_STATUSES,
     PRIORITY_CONTEXT_FIELDS,
     REQUIRED_ISSUE_FIELDS,
 )
-from health_agent.jsonio import load_json, write_json
+from healthpilot.jsonio import load_json, write_json
 
 
 class ValidationError(ValueError):

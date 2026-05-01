@@ -9,12 +9,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from health_agent.actions import build_action_queue_payload
-from health_agent.evidence import build_evidence_snapshot
-from health_agent.jsonio import load_json
-from health_agent.lifestyle import LIFESTYLE_SOURCE_FIELDS
-from health_agent.paths import expand_home, profiles_state_path
-from health_agent.profile import ProfileContext
+from healthpilot.actions import build_action_queue_payload
+from healthpilot.evidence import build_evidence_snapshot
+from healthpilot.jsonio import load_json
+from healthpilot.lifestyle import LIFESTYLE_SOURCE_FIELDS
+from healthpilot.paths import expand_home, profiles_state_path
+from healthpilot.profile import ProfileContext
 
 
 INDEX_SUFFIXES = {".csv", ".json", ".md", ".txt", ".tsv"}

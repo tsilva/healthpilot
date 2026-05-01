@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from health_agent.constants import PRIORITY_BUCKETS
-from health_agent.lifestyle import LIFESTYLE_SOURCE_FIELDS
+from healthpilot.constants import PRIORITY_BUCKETS
+from healthpilot.lifestyle import LIFESTYLE_SOURCE_FIELDS
 
 
 PRIORITY_LABELS = {

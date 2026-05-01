@@ -1,6 +1,6 @@
 ---
 name: medication-history-report
-description: Generate a dated Markdown report of active medications, past medications, and supplements from a selected live health-agent profile. Use when the user asks for a medication list, supplement list, medication history, or a written medication/supplement report in .output/.
+description: Generate a dated Markdown report of active medications, past medications, and supplements from a selected live healthpilot profile. Use when the user asks for a medication list, supplement list, medication history, or a written medication/supplement report in .output/.
 ---
 
 # Medication History Report
@@ -10,7 +10,7 @@ Generate a repo-local Markdown report for the selected live profile.
 ## Inputs
 
 - Follow the session-start rules in `AGENTS.md`.
-- Use the selected live profile under `~/.config/health-agent/profiles/`.
+- Use the selected live profile under `~/.config/healthpilot/profiles/`.
 - Treat external data sources as read-only.
 
 ## Retrieval Order

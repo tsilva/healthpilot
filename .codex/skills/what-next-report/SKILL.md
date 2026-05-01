@@ -1,6 +1,6 @@
 ---
 name: what-next-report
-description: Generate a dated what-next report for a selected live health-agent profile. Use when the user wants a prescriptive "what should I do next?" answer, a current action report, or an updated report after new labs, exams, visit feedback, or symptom changes. The report should include both unresolved-issue actions and health-optimization actions when the data supports them.
+description: Generate a dated what-next report for a selected live healthpilot profile. Use when the user wants a prescriptive "what should I do next?" answer, a current action report, or an updated report after new labs, exams, visit feedback, or symptom changes. The report should include both unresolved-issue actions and health-optimization actions when the data supports them.
 ---
 
 # What Next Report
@@ -41,8 +41,8 @@ Default to the shortest path that still produces a defensible current report.
 2. Generate or read the current evidence packet:
 
 ```bash
-health-agent evidence-packet --profile <profile-name>
-python3 -m health_agent evidence-packet --profile <profile-name>
+healthpilot evidence-packet --profile <profile-name>
+python3 -m healthpilot evidence-packet --profile <profile-name>
 ```
 
 3. Use `.state/profiles/{profile_slug}/evidence-packet.json` as the first evidence map. It is factual only: source status, freshness, changed files, lab/log/exam extracts, medication/supplement mention lines, lifestyle summaries, and issue/action memory.
@@ -57,8 +57,8 @@ python3 -m health_agent evidence-packet --profile <profile-name>
 8. For SelfDecode SNP lookups, check `.state/profiles/{profile_slug}/selfdecode-genotypes.json` first and fetch missing rsIDs with the cache-aware helper:
 
 ```bash
-python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
-SELFDECODE_JWT="<token>" python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+python3 -m healthpilot selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+SELFDECODE_JWT="<token>" python3 -m healthpilot selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
 ```
 
 If authentication is needed, tell the user to copy the `token` field from the `/service/health-analysis/accounts/user/token/` Network response on a logged-in SelfDecode SNP page. Never store JWTs; the helper caches genotypes only.
@@ -66,8 +66,8 @@ If authentication is needed, tell the user to copy the `token` field from the `/
 10. Use the built-in repo helper only as internal support when it reduces deterministic file work:
 
 ```bash
-health-agent plan --profile <profile-name>
-python3 -m health_agent plan --profile <profile-name>
+healthpilot plan --profile <profile-name>
+python3 -m healthpilot plan --profile <profile-name>
 ```
 
 Do not frame the CLI as the primary user interface. The skill itself is the primary interface.
@@ -153,7 +153,7 @@ If the profile configures lifestyle Markdown files:
 - do not edit or rewrite the source Markdown files
 - write regenerated draft plans under `.output/{profile_slug}/`
 - avoid copying the full sidecar constraints into generated plans; include only short conflict notes and source references
-- use `health-agent daily-plan --profile <profile-name> --date YYYY-MM-DD` as deterministic support when it helps render a draft daily plan
+- use `healthpilot daily-plan --profile <profile-name> --date YYYY-MM-DD` as deterministic support when it helps render a draft daily plan
 
 ## Prioritization Rules
 

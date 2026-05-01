@@ -1,4 +1,4 @@
-# Health Agent
+# Healthpilot
 
 This repository is the central hub for a health-autopilot agent. Its job is to connect labs, medical exams, journal entries, symptoms, medications, supplements, experiments, timelines, and genetics into one longitudinal health-analysis workflow.
 
@@ -33,7 +33,7 @@ Recommend specialist type only. Do not recommend arbitrary named doctors outside
 
 At the start of a health-analysis session:
 
-1. List live profiles with `ls ~/.config/health-agent/profiles/*.yaml`.
+1. List live profiles with `ls ~/.config/healthpilot/profiles/*.yaml`.
 2. If no live profiles exist, stop and ask the user for a valid runtime profile. Do not silently use repo-local `profiles/*.yaml`.
 3. If the user has not already named a profile and multiple live profiles exist, ask which profile to use.
 4. Read the selected profile and extract:
@@ -48,7 +48,7 @@ At the start of a health-analysis session:
    - `data_sources.exercise_md_path`
    - `data_sources.lifestyle_constraints_md_path`
    - `data_sources.selfdecode`
-5. If `~/.config/health-agent/.env` exists and the task may need external API credentials, load it.
+5. If `~/.config/healthpilot/.env` exists and the task may need external API credentials, load it.
 6. Validate every configured data source path before analysis and classify each as:
    - `available`
    - `missing`
@@ -161,7 +161,7 @@ Optional but encouraged fields:
 Use the local CLI only when deterministic helper behavior is useful during implementation or maintenance:
 
 ```bash
-python3 -m health_agent plan --profile <profile-name>
+python3 -m healthpilot plan --profile <profile-name>
 ```
 
 Deprecated aliases such as `intake`, `review`, and `outcome-update` may still exist temporarily, but they should be treated as compatibility wrappers around `plan`, not as distinct workflows.
@@ -317,8 +317,8 @@ grep -E "^(rs123|rs456|rs789)" "{genetics_23andme_path}"
 - For SelfDecode lookups, use repo-local caching so fetched SNPs remain available after authentication expires:
 
 ```bash
-SELFDECODE_JWT="<token>" python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
-python3 -m health_agent selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+SELFDECODE_JWT="<token>" python3 -m healthpilot selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
+python3 -m healthpilot selfdecode-genotypes --profile <profile-name> --rsids rs123 rs456
 ```
 
 - Cached SelfDecode genotype data lives at `.state/profiles/{profile_slug}/selfdecode-genotypes.json`.
@@ -360,7 +360,7 @@ Use strategy:
 - For deterministic draft rendering, use:
 
 ```bash
-python3 -m health_agent daily-plan --profile <profile-name> --date YYYY-MM-DD
+python3 -m healthpilot daily-plan --profile <profile-name> --date YYYY-MM-DD
 ```
 
 ## Question-To-Source Retrieval Playbook
@@ -409,7 +409,7 @@ Then cross-check against `all.csv` and any relevant standalone exam data.
 
 1. Query the raw 23andMe file first.
 2. Check `.state/profiles/{profile_slug}/selfdecode-genotypes.json` before asking for SelfDecode authentication.
-3. Use SelfDecode only when enabled and necessary; fetch through `python3 -m health_agent selfdecode-genotypes` so results are cached.
+3. Use SelfDecode only when enabled and necessary; fetch through `python3 -m healthpilot selfdecode-genotypes` so results are cached.
 4. State clearly if the genetics source is missing or unreadable.
 
 ### Root-Cause Investigation
@@ -464,7 +464,7 @@ When the user wants profile-specific questions that would improve future runs if
 
 ## Important Notes
 
-- Privacy: runtime profiles and sensitive paths belong in `~/.config/health-agent/`, not in the repo.
+- Privacy: runtime profiles and sensitive paths belong in `~/.config/healthpilot/`, not in the repo.
 - External sources are read-only. Never modify files under `labs_path`, `exams_path`, `health_log_path`, or `genetics_23andme_path`.
 - Local-only outputs go under `.output/`.
 - Prefer filtered extraction with `rg`, `grep`, `awk`, `head`, and targeted reads over loading large files wholesale.
@@ -473,4 +473,4 @@ When the user wants profile-specific questions that would improve future runs if
 
 ## Maintenance
 
-Keep [README.md](/Users/tsilva/repos/tsilva/health-agent/README.md) aligned with the current repo layout, runtime workflow, and observed data-source structures.
+Keep [README.md](/Users/tsilva/repos/tsilva/healthpilot/README.md) aligned with the current repo layout, runtime workflow, and observed data-source structures.

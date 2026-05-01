@@ -1,6 +1,6 @@
 ---
 name: profile-question-report
-description: Ask a selected live health-agent profile's 10 highest-yield unanswered questions interactively, then write a paste-ready Markdown health-log entry under .output/ for the user's real health log.
+description: Ask a selected live healthpilot profile's 10 highest-yield unanswered questions interactively, then write a paste-ready Markdown health-log entry under .output/ for the user's real health log.
 ---
 
 # Profile Health-Log Interview

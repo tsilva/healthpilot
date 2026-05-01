@@ -9,7 +9,7 @@ from typing import Any
 
 import yaml
 
-from health_agent.paths import expand_home, profiles_dir
+from healthpilot.paths import expand_home, profiles_dir
 
 SOURCE_FIELDS = (
     "labs_path",

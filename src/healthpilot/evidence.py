@@ -8,9 +8,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from health_agent.lifestyle import LIFESTYLE_SOURCE_FIELDS, summarize_markdown_source
-from health_agent.paths import expand_home
-from health_agent.profile import ProfileContext
+from healthpilot.lifestyle import LIFESTYLE_SOURCE_FIELDS, summarize_markdown_source
+from healthpilot.paths import expand_home
+from healthpilot.profile import ProfileContext
 
 
 def _utc_timestamp(value: float | None) -> str | None:

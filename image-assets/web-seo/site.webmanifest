@@ -1,6 +1,6 @@
 {
-  "name": "health-agent",
-  "short_name": "health-agent",
+  "name": "healthpilot",
+  "short_name": "healthpilot",
   "icons": [
     {
       "src": "android-chrome-192.png",

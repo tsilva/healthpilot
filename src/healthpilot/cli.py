@@ -1,4 +1,4 @@
-"""CLI for the rescan-driven health-agent planning workflow."""
+"""CLI for the rescan-driven healthpilot planning workflow."""
 
 from __future__ import annotations
 
@@ -7,29 +7,29 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from health_agent.actions import build_action_queue_payload, render_plan_report
-from health_agent.evidence import build_evidence_snapshot
-from health_agent.evidence_packet import (
+from healthpilot.actions import build_action_queue_payload, render_plan_report
+from healthpilot.evidence import build_evidence_snapshot
+from healthpilot.evidence_packet import (
     build_evidence_packet,
     evidence_packet_path,
     load_previous_evidence_packet,
 )
-from health_agent.issues import (
+from healthpilot.issues import (
     ValidationError,
     load_issue_collection,
     load_issue_store,
     save_issue_store,
 )
-from health_agent.jsonio import write_json
-from health_agent.lifestyle import render_daily_plan
-from health_agent.paths import (
+from healthpilot.jsonio import write_json
+from healthpilot.lifestyle import render_daily_plan
+from healthpilot.paths import (
     ensure_repo_dirs,
     profile_output_path,
     profiles_state_path,
     state_path,
 )
-from health_agent.profile import load_profile_context
-from health_agent.selfdecode import (
+from healthpilot.profile import load_profile_context
+from healthpilot.selfdecode import (
     fetch_selfdecode_genotypes,
     genotype_cache_path,
     load_genotype_cache,
@@ -298,8 +298,8 @@ def run_selfdecode_genotypes(args: argparse.Namespace) -> int:
 
 def _run_deprecated_alias(args: argparse.Namespace, alias: str) -> int:
     message = (
-        f"warning: `health-agent {alias}` is deprecated; use "
-        f"`health-agent plan --profile {args.profile}`.\n"
+        f"warning: `healthpilot {alias}` is deprecated; use "
+        f"`healthpilot plan --profile {args.profile}`.\n"
     )
     print(message, end="")
     return run_plan(args)
@@ -316,7 +316,7 @@ def run_review(args: argparse.Namespace) -> int:
 def run_outcome_update(args: argparse.Namespace) -> int:
     if args.update_file or args.revised_issue:
         print(
-            "warning: manual outcome update files are deprecated; rescan the parsed sources and rerun `health-agent plan`.\n",
+            "warning: manual outcome update files are deprecated; rescan the parsed sources and rerun `healthpilot plan`.\n",
             end="",
         )
     return _run_deprecated_alias(args, "outcome-update")
@@ -349,7 +349,7 @@ def _add_deprecated_outcome_arguments(parser: argparse.ArgumentParser) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="health-agent",
+        prog="healthpilot",
         description="Rescan parsed health data sources and render the current action plan.",
     )
     parser.add_argument(
@@ -362,7 +362,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--home-dir",
         type=Path,
         default=Path.home(),
-        help="Home directory used to resolve ~/.config/health-agent profiles.",
+        help="Home directory used to resolve ~/.config/healthpilot profiles.",
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)

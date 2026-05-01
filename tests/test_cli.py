@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from health_agent.cli import main
+from healthpilot.cli import main
 
 
 def _write_json(path: Path, payload: dict) -> None:
@@ -22,7 +22,7 @@ def _write_profile(
     unreadable_lifestyle_source: str | None = None,
     selfdecode: bool = False,
 ) -> dict[str, Path]:
-    config_dir = home_dir / ".config" / "health-agent" / "profiles"
+    config_dir = home_dir / ".config" / "healthpilot" / "profiles"
     config_dir.mkdir(parents=True, exist_ok=True)
 
     profile_root = home_dir / "data" / slug
@@ -941,4 +941,4 @@ def test_docs_match_skill_first_workflow() -> None:
 
     for content in (readme, agents, skill):
         assert "outcome-update --profile" not in content
-        assert "health-agent review --profile" not in content
+        assert "healthpilot review --profile" not in content

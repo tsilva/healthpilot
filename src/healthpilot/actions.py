@@ -199,12 +199,57 @@ def _describe_source_details(source_name: str, metadata: dict[str, Any]) -> list
     return lines
 
 
+def _current_active_condition_lines(issues: dict[str, dict[str, Any]]) -> list[str]:
+    active_issues = [
+        (slug, issue)
+        for slug, issue in sorted(issues.items())
+        if issue["status"] in {"active", "monitoring"}
+    ]
+    if not active_issues:
+        return ["- No active or monitoring conditions are currently tracked in issue state."]
+
+    lines = []
+    for slug, issue in active_issues:
+        lines.append(
+            "- "
+            f"{issue['title']} (`{slug}`): {issue['status']}; "
+            f"{issue['confidence_frame']}; {issue['working_conclusion']}"
+        )
+    return lines
+
+
+def _current_medication_stack_lines(evidence_packet: dict[str, Any] | None) -> list[str]:
+    mentions = (
+        (evidence_packet or {})
+        .get("health_log", {})
+        .get("medication_supplement_mentions_needing_review", [])
+    )
+    if not mentions:
+        return [
+            "- No current medication or supplement stack was captured in the "
+            "deterministic evidence packet; verify against recent health-log entries."
+        ]
+
+    lines = [
+        "- Complete current stack requires reconciliation; recent parsed medication/supplement evidence:"
+    ]
+    for mention in mentions[:8]:
+        location = mention.get("path", "")
+        line_number = mention.get("line")
+        if location and line_number:
+            location = f"{location}:{line_number}"
+        text = mention.get("text", "Medication/supplement mention captured.")
+        lines.append(f"- {text} ({location})" if location else f"- {text}")
+    return lines
+
+
 def render_plan_report(
     *,
     profile_slug: str,
     profile_name: str,
     generated_at: str,
     evidence_snapshot: dict[str, Any],
+    evidence_packet: dict[str, Any] | None = None,
     issues: dict[str, dict[str, Any]],
     action_queue: dict[str, Any],
 ) -> str:
@@ -215,9 +260,27 @@ def render_plan_report(
         f"Report generated: {generated_at}",
         f"Profile: `{profile_slug}`",
         "",
-        "## Source Status",
+        "## Current Status Summary",
+        "",
+        "### Current Active Conditions",
         "",
     ]
+    lines.extend(_current_active_condition_lines(issues))
+    lines.extend(
+        [
+            "",
+            "### Current Medication / Supplement Stack",
+            "",
+        ]
+    )
+    lines.extend(_current_medication_stack_lines(evidence_packet))
+    lines.extend(
+        [
+            "",
+            "## Source Status",
+            "",
+        ]
+    )
     for source_name, metadata in source_status.items():
         sample = metadata.get("sample", [])
         sample_suffix = f" (sample: {', '.join(sample)})" if sample else ""

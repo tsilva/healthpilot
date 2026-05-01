@@ -460,6 +460,13 @@ When the task is an unresolved issue review or a follow-up after new parsed evid
 
 When the user asks more generally what to do next, use the `what-next-report` skill path and generate a dated report under `.output/` that ranks the strongest next actions across both unresolved issues and optimization opportunities. Do not limit the report to unresolved diagnoses if the broader record supports concrete optimization steps.
 
+Every what-next report must start its substantive content with a current status summary before source status or ranked actions. Include:
+
+- `Current active conditions`: active or monitoring conditions/issues with confidence frame and working conclusion.
+- `Current medication / supplement stack`: the current stack if directly supported by the parsed record, or a clear reconciliation note with the recent medication/supplement evidence used.
+
+This lets the user confirm whether the report took current status into account before acting on the recommendations.
+
 When the user wants profile-specific questions that would improve future runs if answered, use the `profile-question-report` skill to ask the highest-yield questions interactively and generate a paste-ready health-log entry draft under `.output/{profile_slug}/{YYYY-MM-DD}-{profile_slug}-health-log-entry.md`. The deliverable should be a concise first-person Markdown entry based on the user's answers, and all profile-linked external sources remain read-only.
 
 ## Important Notes

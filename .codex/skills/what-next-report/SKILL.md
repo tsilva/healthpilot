@@ -91,15 +91,29 @@ The report should usually contain:
 1. Title
 2. `Report generated`
 3. `Profile`
-4. `Source status`
-5. `Top next actions`
-6. `Unresolved issues`
-7. `Optimization opportunities`
-8. `What to return with`
+4. `Current status summary`
+5. `Source status`
+6. `Top next actions`
+7. `Unresolved issues`
+8. `Optimization opportunities`
+9. `What to return with`
+
+The first substantive report section must be `Current status summary`, with:
+
+- `Current active conditions`: active or monitoring conditions/issues, including confidence frame and working conclusion.
+- `Current medication / supplement stack`: the current stack if the record supports it, or a clear reconciliation note plus the recent medication/supplement evidence used.
+
+This section exists so the user can immediately confirm whether the report took the current status into account before reading the action plan.
 
 When lifestyle sources are configured, include them in source status and use `lifestyle_constraints_md_path` as the authority for conflicts between schedule, nutrition, exercise, symptom triggers, target weight changes, and preferences.
 
 ## Report Content Rules
+
+### Current Status Summary
+
+Start every what-next report with this section before source status or ranked actions.
+
+Use observed evidence for medication and supplement status. If the parsed record only contains medication/supplement mentions or recent changes rather than a reconciled active list, say that directly and list the evidence that needs reconciliation instead of pretending it is a confirmed current stack.
 
 ### Top Next Actions
 

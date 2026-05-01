@@ -283,6 +283,10 @@ def test_plan_creates_per_profile_state_and_report_on_first_run(tmp_path: Path) 
 
     report = next((repo_root / ".output" / "test-user").glob("????-??-??-test-user-action-plan.md"))
     report_text = report.read_text(encoding="utf-8")
+    assert report_text.index("## Current Status Summary") < report_text.index("## Source Status")
+    assert "### Current Active Conditions" in report_text
+    assert "### Current Medication / Supplement Stack" in report_text
+    assert "No active or monitoring conditions are currently tracked in issue state." in report_text
     assert "Current Evidence Snapshot" in report_text
     assert "No active actions. All tracked issues are resolved or parked." in report_text
 
@@ -291,7 +295,11 @@ def test_plan_uses_profile_issue_store_and_dedupes_actions(tmp_path: Path) -> No
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
     home_dir = tmp_path / "home"
-    _write_profile(home_dir)
+    paths = _write_profile(home_dir)
+    (paths["entries_dir"] / "2026-04-15.processed.md").write_text(
+        "Started magnesium supplement at night and stopped pantoprazole.\n",
+        encoding="utf-8",
+    )
 
     shared_action = "Book a targeted hematology visit."
     _write_issue_store(
@@ -330,6 +338,11 @@ def test_plan_uses_profile_issue_store_and_dedupes_actions(tmp_path: Path) -> No
     assert len(actions["actions"]) == 1
     assert sorted(actions["actions"][0]["related_issues"]) == ["issue-a", "issue-b"]
     assert actions["actions"][0]["source_citations"] == ["/tmp/source.md"]
+
+    report = next((repo_root / ".output" / "test-user").glob("????-??-??-test-user-action-plan.md"))
+    report_text = report.read_text(encoding="utf-8")
+    assert "Issue A (`issue-a`): active; differential; Working conclusion for test coverage." in report_text
+    assert "Started magnesium supplement at night and stopped pantoprazole." in report_text
 
 
 def test_evidence_packet_creates_factual_packet_from_all_sources(tmp_path: Path) -> None:

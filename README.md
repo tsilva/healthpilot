@@ -33,7 +33,7 @@ Then invoke the agent from this repo with a prompt like:
 Use the what-next-report skill for profile myname and write the refreshed next-steps report.
 ```
 
-Reports are written under `.output/<profile_slug>/`.
+Reports are written under `.output/<profile_slug>/`. Each what-next report opens with a current status summary covering active conditions and the current medication/supplement stack, or the recent medication/supplement evidence that still needs reconciliation.
 
 ## Commands
 

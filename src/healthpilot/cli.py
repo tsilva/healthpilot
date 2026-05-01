@@ -71,6 +71,7 @@ def _write_profile_state(
     profile_context: Any,
     generated_at: str,
     evidence_snapshot: dict[str, Any],
+    evidence_packet: dict[str, Any] | None = None,
     issues: dict[str, dict[str, Any]],
 ) -> tuple[Path, Path]:
     actions_payload = build_action_queue_payload(
@@ -99,6 +100,7 @@ def _write_profile_state(
         profile_name=profile_context.cache_payload["profile_name"],
         generated_at=generated_at,
         evidence_snapshot=evidence_snapshot,
+        evidence_packet=evidence_packet,
         issues=issues,
         action_queue=actions_payload,
     )
@@ -196,6 +198,7 @@ def run_plan(args: argparse.Namespace) -> int:
         profile_context=profile_context,
         generated_at=generated_at,
         evidence_snapshot=evidence_snapshot,
+        evidence_packet=evidence_packet,
         issues=issues,
     )
     return 0

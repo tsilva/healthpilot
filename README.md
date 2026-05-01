@@ -3,7 +3,7 @@
 
   # health-agent
 
-  **A skill-first health-autopilot layer: invoke the agent, let it read the parsed data, and have it write the current next-step plan.**
+  **🧭 Turn parsed health records into ranked next steps 🧭**
 </div>
 
 health-agent is a local, file-based workflow for turning parsed health records into ranked next steps. It connects runtime profiles, labs, exams, health-log entries, medications, supplements, lifestyle notes, genetics, and project Codex skills into one longitudinal planning loop.

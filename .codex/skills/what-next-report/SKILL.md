@@ -24,6 +24,7 @@ The expected user experience is simple: they ask the agent for next steps, this 
 - generate a single prescriptive report that answers "what should I do next?"
 - include unresolved-issue actions when the record supports them
 - also include broader health-optimization actions when they are actionable and evidence-backed
+- include researched self-experiments that the user can run independently when they have a favorable expected return, burden, safety, and measurability profile
 - keep outputs concise, ranked, and easy to follow
 
 ## Required Session Rules
@@ -94,9 +95,10 @@ The report should usually contain:
 4. `Current status summary`
 5. `Source status`
 6. `Top next actions`
-7. `Unresolved issues`
-8. `Optimization opportunities`
-9. `What to return with`
+7. `Self-experiments ranked by ROI`
+8. `Unresolved issues`
+9. `Optimization opportunities`
+10. `What to return with`
 
 The first substantive report section must be `Current status summary`, with:
 
@@ -117,11 +119,12 @@ Use observed evidence for medication and supplement status. If the parsed record
 
 ### Top Next Actions
 
-Rank the best actions across both categories:
+Rank the best actions across both clinician-facing and self-directed categories:
 
 - unresolved diagnosis or workup actions
 - follow-up or surveillance actions
 - treatment-discussion actions
+- high-ROI self-experiments the user can run independently
 - optimization actions for sleep, GI function, exercise, recovery, diet, or other high-value areas
 
 Do not include vague filler. Prefer a short ranked list of concrete actions.
@@ -132,6 +135,38 @@ For each ranked action, include:
 - `Why`
 - `What to ask for` or `What to do`
 - `What to return with`
+
+Self-directed experiments can appear in `Top Next Actions` when their expected return is high enough, but do not let them displace time-sensitive medical workups, actions that materially narrow a differential, or actions that could change a treatment class.
+
+### Self-Experiments Ranked By ROI
+
+Every what-next report should include this section unless there are no defensible self-directed experiments to recommend right now. These are things the user can do independently to improve health or quality of life, including supplements, lifestyle changes, diet timing, exercise or recovery changes, sleep interventions, symptom-trigger avoidance, tracking protocols, environmental changes, or low-risk devices/tools.
+
+Only include experiments that are researched and tailored to the profile. Use the user's record first, then current medical literature, guidelines, or reputable evidence summaries when the claim depends on external evidence. Cite the evidence briefly enough that the user can audit why the experiment made the list.
+
+Rank experiments by practical ROI, blending:
+
+- expected benefit for this profile's active issues, symptoms, goals, and constraints
+- ease of execution and adherence burden
+- cost, time requirement, and reversibility
+- safety margin, interaction risk, and downside if wrong
+- speed and clarity of feedback
+- measurability with available symptoms, logs, wearables, labs, or repeatable observations
+- strength and relevance of evidence
+
+For each experiment, include:
+
+- `ROI rank`
+- `Hypothesis`
+- `What to do`
+- `Duration`
+- `How to measure success`
+- `Stop / avoid if`
+- `Why this is worth trying now`
+- `Evidence basis`
+- `Expected ROI`
+
+Prefer cheap, low-friction experiments with plausible high upside before expensive, complex, or ambiguous experiments. Avoid generic wellness filler. Avoid unsafe self-treatment, prescription-only interventions, aggressive supplement stacks, or experiments that could obscure an active diagnostic workup. For supplements, mention relevant medication interactions, lab-monitoring considerations, and conditions that would make the experiment inappropriate.
 
 ### Unresolved Issues
 

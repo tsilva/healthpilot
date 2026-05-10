@@ -289,27 +289,11 @@ def render_plan_report(
         f"Report generated: {generated_at}",
         f"Profile: `{profile_slug}`",
         "",
-        "## Source Status",
+        "## Current Status Summary",
+        "",
+        "### Current Active Conditions",
         "",
     ]
-    for source_name, metadata in source_status.items():
-        sample = metadata.get("sample", [])
-        sample_suffix = f" (sample: {', '.join(sample)})" if sample else ""
-        path = metadata.get("path", "")
-        path_suffix = f" - `{path}`" if path else ""
-        lines.append(
-            f"- `{source_name}`: {metadata.get('status', 'unknown')}{path_suffix}{sample_suffix}"
-        )
-
-    lines.extend(
-        [
-            "",
-            "## Current Status Summary",
-            "",
-            "### Current Active Conditions",
-            "",
-        ]
-    )
     lines.extend(_current_active_condition_lines(issues))
     lines.extend(
         [
@@ -319,6 +303,16 @@ def render_plan_report(
         ]
     )
     lines.extend(_current_medication_stack_lines(evidence_packet))
+
+    lines.extend(["", "## Source Status", ""])
+    for source_name, metadata in source_status.items():
+        sample = metadata.get("sample", [])
+        sample_suffix = f" (sample: {', '.join(sample)})" if sample else ""
+        path = metadata.get("path", "")
+        path_suffix = f" - `{path}`" if path else ""
+        lines.append(
+            f"- `{source_name}`: {metadata.get('status', 'unknown')}{path_suffix}{sample_suffix}"
+        )
 
     lines.extend(["", "## Current Evidence Snapshot", ""])
     for source_name, metadata in source_status.items():

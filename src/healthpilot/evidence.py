@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -58,8 +57,8 @@ def _summarize_labs(source_path: Path) -> dict[str, Any]:
             "recent_abnormal_results": [],
         }
 
-    recent_results: deque[dict[str, str]] = deque(maxlen=5)
-    recent_abnormal_results: deque[dict[str, str]] = deque(maxlen=5)
+    results: list[dict[str, str]] = []
+    abnormal_results: list[dict[str, str]] = []
     total_rows = 0
 
     try:
@@ -82,7 +81,7 @@ def _summarize_labs(source_path: Path) -> dict[str, Any]:
                     "value": value,
                     "unit": unit,
                 }
-                recent_results.append(entry)
+                results.append(entry)
                 if any(
                     (
                         _truthy(row.get("is_above_limit")),
@@ -90,7 +89,7 @@ def _summarize_labs(source_path: Path) -> dict[str, Any]:
                         _truthy(row.get("review_needed")),
                     )
                 ):
-                    recent_abnormal_results.append(entry)
+                    abnormal_results.append(entry)
     except OSError:
         return {
             "all_csv_present": True,
@@ -99,11 +98,14 @@ def _summarize_labs(source_path: Path) -> dict[str, Any]:
             "error": "Unable to read all.csv",
         }
 
+    results.sort(key=lambda item: (item["date"], item["label"].lower()))
+    abnormal_results.sort(key=lambda item: (item["date"], item["label"].lower()))
+
     return {
         "all_csv_present": True,
         "total_rows": total_rows,
-        "recent_results": list(recent_results),
-        "recent_abnormal_results": list(recent_abnormal_results),
+        "recent_results": results[-5:],
+        "recent_abnormal_results": abnormal_results[-5:],
     }
 
 

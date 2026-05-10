@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import re
-from collections import Counter, defaultdict, deque
+from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -254,8 +254,8 @@ def _summarize_labs(source_snapshot: dict[str, Any]) -> dict[str, Any]:
     if not all_csv_path.exists():
         return {"status": "available", "all_csv_present": False}
 
-    latest_rows: deque[dict[str, Any]] = deque(maxlen=12)
-    abnormal_rows: deque[dict[str, Any]] = deque(maxlen=16)
+    lab_rows: list[dict[str, Any]] = []
+    abnormal_rows: list[dict[str, Any]] = []
     dates: set[str] = set()
     marker_dates: dict[str, set[str]] = defaultdict(set)
     total_rows = 0
@@ -268,7 +268,7 @@ def _summarize_labs(source_snapshot: dict[str, Any]) -> dict[str, Any]:
                 if entry["date"]:
                     dates.add(entry["date"])
                     marker_dates[entry["label"]].add(entry["date"])
-                latest_rows.append(entry)
+                lab_rows.append(entry)
                 if entry["is_abnormal"]:
                     abnormal_rows.append(entry)
     except OSError:
@@ -280,14 +280,16 @@ def _summarize_labs(source_snapshot: dict[str, Any]) -> dict[str, Any]:
         if len(values) >= 2
     ]
     trend_candidates.sort(key=lambda item: (-item["date_count"], item["label"].lower()))
+    lab_rows.sort(key=lambda item: (item["date"], item["label"].lower()))
+    abnormal_rows.sort(key=lambda item: (item["date"], item["label"].lower()))
     return {
         "status": "available",
         "all_csv_path": str(all_csv_path),
         "all_csv_present": True,
         "total_rows": total_rows,
         "latest_lab_dates": sorted(dates)[-8:],
-        "latest_results": list(latest_rows),
-        "abnormal_markers": list(abnormal_rows),
+        "latest_results": lab_rows[-12:],
+        "abnormal_markers": abnormal_rows[-16:],
         "trend_candidates": trend_candidates[:20],
     }
 

@@ -121,6 +121,7 @@ For the normal user-facing experience, prefer generating a single dated what-nex
 
 - unresolved issue actions
 - broader health optimization actions supported by the record
+- researched self-experiments ranked by practical ROI when the record supports independent action
 
 Treat `.state/` as internal support for memory and ranking, not as the primary user-facing workflow. The canonical user-facing loop is:
 
@@ -174,7 +175,8 @@ Rank actions in this order:
 2. actions that could change treatment class or specialist path
 3. actions that resolve missing objective evidence
 4. actions that reduce risk if delayed
-5. lower-value optimization or curiosity actions
+5. high-ROI self-experiments or optimization actions supported by the record
+6. lower-value optimization or curiosity actions
 
 Encode this explicitly in `priority_context` whenever you write or revise an issue.
 
@@ -466,6 +468,8 @@ Every what-next report must start its substantive content with a current status 
 - `Current medication / supplement stack`: the current stack if directly supported by the parsed record, or a clear reconciliation note with the recent medication/supplement evidence used.
 
 This lets the user confirm whether the report took current status into account before acting on the recommendations.
+
+Every what-next report should also include `Self-experiments ranked by ROI` unless there are no defensible self-directed experiments to recommend. These should be researched, tailored to the profile, and ranked by expected benefit relative to effort, cost, safety, reversibility, time-to-feedback, measurability, and evidence quality. Include supplements, lifestyle changes, diet timing, sleep, exercise, recovery, tracking, environmental changes, or other independent experiments only when they are plausible for the user's record and constraints. For each experiment, state the hypothesis, what to do, duration, success metric, stop/avoid criteria, evidence basis, and expected ROI. Do not recommend unsafe self-treatment, prescription-only interventions, or experiments likely to obscure an active diagnostic workup.
 
 When the user wants profile-specific questions that would improve future runs if answered, use the `profile-question-report` skill to ask the highest-yield questions interactively and generate a paste-ready health-log entry draft under `.output/{profile_slug}/{YYYY-MM-DD}-{profile_slug}-health-log-entry.md`. The deliverable should be a concise first-person Markdown entry based on the user's answers, and all profile-linked external sources remain read-only.
 

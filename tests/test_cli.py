@@ -250,7 +250,22 @@ def test_plan_creates_per_profile_state_and_report_on_first_run(tmp_path: Path) 
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
     home_dir = tmp_path / "home"
-    _write_profile(home_dir)
+    paths = _write_profile(home_dir)
+    (paths["labs_dir"] / "all.csv").write_text(
+        "\n".join(
+            [
+                "date,lab_name,value,lab_unit,is_above_limit,is_below_limit,review_needed",
+                "2026-04-10,Ferritin,18,ng/mL,false,true,false",
+                "2026-04-15,Vitamin D,42,ng/mL,false,false,false",
+                "2025-12-01,Erythrocytes,4.1,x10^12/L,false,true,false",
+                "2026-04-12,Hemoglobin,11.6,g/dL,false,true,true",
+                "2020-01-01,Old file-order tail,1,u,false,false,false",
+                "2026-04-11,CRP,0.3,mg/L,false,false,false",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     exit_code = main(
         [
@@ -283,11 +298,13 @@ def test_plan_creates_per_profile_state_and_report_on_first_run(tmp_path: Path) 
 
     report = next((repo_root / ".output" / "test-user").glob("????-??-??-test-user-action-plan.md"))
     report_text = report.read_text(encoding="utf-8")
-    assert report_text.index("## Source Status") < report_text.index("## Current Status Summary")
+    assert report_text.index("## Current Status Summary") < report_text.index("## Source Status")
     assert "### Current Active Conditions" in report_text
     assert "### Current Medication / Supplement Stack" in report_text
     assert "No active or monitoring conditions are currently tracked in issue state." in report_text
     assert "Current Evidence Snapshot" in report_text
+    assert "Recent results: 2026-04-11 CRP 0.3mg/L" in report_text
+    assert "Old file-order tail" not in report_text
     assert "No active actions. All tracked issues are resolved or parked." in report_text
 
 

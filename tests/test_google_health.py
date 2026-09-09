@@ -378,6 +378,9 @@ def test_weight_sleep_activity_and_calories_use_verified_api_shapes(tmp_path, mo
             assert request.get_method() == "POST"
             assert request.full_url.endswith(":dailyRollUp")
             request_body = json.loads(request.data)
+            # Match live dailyRollUp validation rather than the published
+            # 10000-point limit, which the service rejects with HTTP 400.
+            assert request_body.get("pageSize", 1440) <= 1440
             interval = request_body["range"]
             first, last = (date(**interval[side]["date"]) for side in ("start", "end"))
             if "/total-calories/" in request.full_url:

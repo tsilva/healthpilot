@@ -111,9 +111,11 @@ def _fetch(client: AuthorizedClient, name: str, start: date, end: date) -> dict[
     seen_tokens: set[str] = set()
     while True:
         if metric.rollup:
+            # The live dailyRollUp service rejects pageSize=10000 despite the
+            # reference limit. Its default covers our bounded daily windows.
             params = {"range": {"start": {"date": _date_object(start)},
                                  "end": {"date": _date_object(end + timedelta(days=1))}},
-                      "windowSizeDays": 1, "pageSize": 10000,
+                      "windowSizeDays": 1,
                       "dataSourceFamily": "users/me/dataSourceFamilies/all-sources"}
             if page_token:
                 params["pageToken"] = page_token

@@ -199,6 +199,9 @@ def build_evidence_snapshot(
         name: _build_source_snapshot(name, metadata)
         for name, metadata in profile_context.cache_payload["sources"].items()
     }
+    from healthpilot.google_health import source_metadata
+
+    sources["google_health"] = source_metadata(profile_context)
     return {
         "profile_slug": profile_context.slug,
         "profile_name": profile_context.cache_payload["profile_name"],

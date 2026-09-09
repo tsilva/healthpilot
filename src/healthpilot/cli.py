@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import json
 from collections import Counter
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +31,7 @@ from healthpilot.paths import (
     report_output_path,
     state_path,
 )
-from healthpilot.profile import load_profile_context
+from healthpilot.profile import ProfileContext, load_profile_context
 from healthpilot.selfdecode import (
     fetch_selfdecode_genotypes,
     genotype_cache_path,
@@ -41,6 +42,64 @@ from healthpilot.selfdecode import (
     update_genotype_cache,
 )
 from healthpilot.report_validation import REPORT_CONTRACTS, validate_report
+from healthpilot.google_health import METRICS, retrieve
+from healthpilot.google_health_auth import GoogleHealthError, configure, connect, connection_status
+
+
+def _profile_with_wearables(args: argparse.Namespace) -> ProfileContext:
+    profile = load_profile_context(args.profile, home_dir=args.home_dir)
+    metrics = getattr(args, "wearable_metrics", None)
+    start, end = getattr(args, "wearable_start", None), getattr(args, "wearable_end", None)
+    if metrics or start or end or getattr(args, "wearable_refresh", False):
+        if not (metrics and start and end):
+            raise ValidationError("Wearable retrieval requires --wearable-metrics, --wearable-start and --wearable-end.")
+        profile.wearable_evidence = retrieve(profile=profile, home_dir=args.home_dir,
+            start=start, end=end, metrics=metrics, refresh=args.wearable_refresh)
+    return profile
+
+
+def _calendar_date(value: str) -> date:
+    try:
+        parsed = date.fromisoformat(value)
+        if parsed.isoformat() != value:
+            raise ValueError
+        return parsed
+    except ValueError:
+        raise argparse.ArgumentTypeError("Use a calendar date in YYYY-MM-DD format.") from None
+
+
+def _add_wearable_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--wearable-metrics", nargs="+", choices=tuple(METRICS))
+    parser.add_argument("--wearable-start", type=_calendar_date, help="Inclusive source civil date.")
+    parser.add_argument("--wearable-end", type=_calendar_date, help="Inclusive source civil date.")
+    parser.add_argument("--wearable-refresh", action="store_true", help="Also refresh requested historical wearable dates.")
+
+
+def run_google_health_configure(args: argparse.Namespace) -> int:
+    configure(args.home_dir, args.client_file)
+    print("Shared Google OAuth application configured.")
+    return 0
+
+
+def run_google_health_connect(args: argparse.Namespace) -> int:
+    profile = load_profile_context(args.profile, home_dir=args.home_dir)
+    print(json.dumps(connect(profile, args.home_dir, args.account, args.timezone), indent=2))
+    return 0
+
+
+def run_google_health_status(args: argparse.Namespace) -> int:
+    profile = load_profile_context(args.profile, home_dir=args.home_dir)
+    print(json.dumps(connection_status(profile, args.home_dir), indent=2))
+    return 0
+
+
+def run_google_health(args: argparse.Namespace) -> int:
+    profile = load_profile_context(args.profile, home_dir=args.home_dir)
+    result = retrieve(profile=profile, home_dir=args.home_dir,
+                      start=args.start, end=args.end,
+                      metrics=args.metrics, refresh=args.refresh)
+    print(json.dumps(result, indent=2))
+    return 0
 
 
 def _utc_now() -> str:
@@ -146,7 +205,7 @@ def _build_and_write_evidence_packet(
 
 def run_evidence_packet(args: argparse.Namespace) -> int:
     repo_root = args.repo_root.resolve()
-    profile_context = load_profile_context(args.profile, home_dir=args.home_dir)
+    profile_context = _profile_with_wearables(args)
     ensure_repo_dirs(repo_root, profile_context.slug)
     generated_at = _utc_now()
     issues = _load_profile_issues(repo_root, profile_slug=profile_context.slug)
@@ -161,7 +220,7 @@ def run_evidence_packet(args: argparse.Namespace) -> int:
 
 def run_plan(args: argparse.Namespace) -> int:
     repo_root = args.repo_root.resolve()
-    profile_context = load_profile_context(args.profile, home_dir=args.home_dir)
+    profile_context = _profile_with_wearables(args)
     ensure_repo_dirs(repo_root, profile_context.slug)
     generated_at = _utc_now()
 
@@ -201,7 +260,7 @@ def _validate_plan_date(value: str) -> str:
 
 def run_daily_plan(args: argparse.Namespace) -> int:
     repo_root = args.repo_root.resolve()
-    profile_context = load_profile_context(args.profile, home_dir=args.home_dir)
+    profile_context = _profile_with_wearables(args)
     ensure_repo_dirs(repo_root, profile_context.slug)
     generated_at = _utc_now()
     target_date = _validate_plan_date(args.date or generated_at[:10])
@@ -264,7 +323,7 @@ def run_migrate_output_layout(args: argparse.Namespace) -> int:
 
 def run_selfdecode_genotypes(args: argparse.Namespace) -> int:
     repo_root = args.repo_root.resolve()
-    profile_context = load_profile_context(args.profile, home_dir=args.home_dir)
+    profile_context = _profile_with_wearables(args)
     ensure_repo_dirs(repo_root, profile_context.slug)
 
     rsids = normalize_rsids(args.rsids)
@@ -394,6 +453,26 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    application = subparsers.add_parser("google-health-configure", help="Import a shared Desktop OAuth app.")
+    application.add_argument("--client-file", type=Path, required=True)
+    application.set_defaults(func=run_google_health_configure)
+    connection = subparsers.add_parser("google-health-connect", help="Authorize one profile's Google account.")
+    _add_profile_argument(connection)
+    connection.add_argument("--account", required=True, help="Expected verified Google email.")
+    connection.add_argument("--timezone", default="UTC", help="IANA timezone for the seven-day refresh clock.")
+    connection.set_defaults(func=run_google_health_connect)
+    status = subparsers.add_parser("google-health-status", help="Show the selected profile's account and scopes.")
+    _add_profile_argument(status)
+    status.set_defaults(func=run_google_health_status)
+
+    wearable = subparsers.add_parser("google-health", help="Retrieve profile-scoped wearable evidence.")
+    _add_profile_argument(wearable)
+    wearable.add_argument("--metrics", nargs="+", required=True, choices=tuple(METRICS))
+    wearable.add_argument("--start", required=True, type=_calendar_date, help="Inclusive civil date, YYYY-MM-DD.")
+    wearable.add_argument("--end", required=True, type=_calendar_date, help="Inclusive civil date, YYYY-MM-DD.")
+    wearable.add_argument("--refresh", action="store_true")
+    wearable.set_defaults(func=run_google_health)
+
     plan_description = (
         "Rescan parsed source folders and refresh per-profile evidence, issue, and action state."
     )
@@ -403,6 +482,7 @@ def build_parser() -> argparse.ArgumentParser:
         description=plan_description,
     )
     _add_profile_argument(plan)
+    _add_wearable_arguments(plan)
     _add_optional_issues_argument(plan)
     plan.set_defaults(func=run_plan)
 
@@ -411,6 +491,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Build the deterministic evidence packet used by agent-facing planning.",
     )
     _add_profile_argument(packet)
+    _add_wearable_arguments(packet)
     packet.set_defaults(func=run_evidence_packet)
 
     daily_plan = subparsers.add_parser(
@@ -418,6 +499,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Render a draft daily lifestyle plan from profile-linked Markdown sources.",
     )
     _add_profile_argument(daily_plan)
+    _add_wearable_arguments(daily_plan)
     daily_plan.add_argument(
         "--date",
         help="Target date for the draft plan in YYYY-MM-DD format. Defaults to today.",
@@ -509,5 +591,5 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.func(args)
-    except (FileNotFoundError, ValidationError) as exc:
+    except (FileNotFoundError, ValidationError, GoogleHealthError) as exc:
         parser.exit(status=2, message=f"error: {exc}\n")

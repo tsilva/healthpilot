@@ -304,6 +304,18 @@ When `exams_path` is available:
 - learn the concrete file layout for that profile before assuming filename conventions
 - use the standalone exam corpus as the primary source for exam/imaging/endoscopy questions
 
+### Google Health Wearable Data
+
+Google Health is an optional runtime connection, discovered by canonical live profile slug; no YAML source path is needed. See [setup and retrieval](docs/google-health.md). Its runtime credentials and measurements belong under `~/.config/healthpilot/google-health/`, outside the repository.
+
+- Use `healthpilot google-health-status --profile <slug>` to inspect the connection locally. Never copy account identity, credentials, or runtime paths into reports.
+- For relevant reports or ad hoc questions, retrieve the needed metric/date window with `healthpilot google-health --profile <slug> --metrics <metrics> --start YYYY-MM-DD --end YYYY-MM-DD`, or use `--wearable-metrics`, `--wearable-start`, and `--wearable-end` on `plan` / `evidence-packet`.
+- Supported metric names: `hrv`, `resting-heart-rate`, `heart-rate`, `weight`, `sleep`, `steps`, and `calories`. Choose detailed heart rate only for a relevant episode/window.
+- Explicit retrieval refreshes requested dates in the latest seven calendar days. Add `--refresh` (or `--wearable-refresh` on report-support commands) for historical corrections.
+- The normal evidence packet exposes `wearables`, safe citation IDs, and `google_health` source coverage. Without retrieval flags it reuses only the last selected cached window. Inspect dates, metrics, missing days and stale status; do not assume other history is covered. Retrieve relevant dates again for fresh reports.
+- Consider this source in every report when relevant, including unavailable/partial/stale coverage in the evidence appendix. Preserve source time/units, assign sleep to its source waking date, and do not double-count reconciled calorie totals. Wearable measurements alone do not establish a diagnosis.
+- An unconnected profile is `not configured` and must continue working. Never borrow another profile's credentials or cache. Connecting an account requires its owner's explicit OAuth consent; synthetic automated tests do not authorize a live connection.
+
 ### Genetics Data
 
 Configured source:

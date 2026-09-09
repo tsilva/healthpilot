@@ -30,6 +30,8 @@ class ProfileContext:
     path: Path
     data: dict[str, Any]
     cache_payload: dict[str, Any]
+    home_dir: Path | None = None
+    wearable_evidence: dict[str, Any] | None = None
 
 
 def discover_profile_path(profile_ref: str, *, home_dir: Path) -> Path:
@@ -103,4 +105,5 @@ def load_profile_context(profile_ref: str, *, home_dir: Path) -> ProfileContext:
         path=profile_path,
         data=raw_data,
         cache_payload=cache_payload,
+        home_dir=home_dir,
     )

@@ -61,6 +61,7 @@ Deprecated aliases such as `healthpilot intake`, `healthpilot review`, and `heal
 - Derived state lives under `.state/profiles/<profile_slug>/`; user-facing reports live under `.output/<profile_slug>/<report_type>/`.
 - Evidence packets use report-safe citation IDs in user-facing artifacts while retaining private path resolution under `.state/`.
 - The primary data sources are `labs-parser`, `medical-exams-parser`, `health-log-parser`, optional raw 23andMe data, optional SelfDecode genotype lookups, and optional lifestyle Markdown files.
+- Optional Google Health wearable evidence uses one shared Desktop OAuth app and profile-isolated credentials/cache under `~/.config/healthpilot/google-health/`. See [setup, retrieval, and report integration](docs/google-health.md). Unconnected profiles continue to work.
 - SelfDecode JWTs are transient credentials. The cache stores genotype results only, in `.state/profiles/<profile_slug>/selfdecode-genotypes.json`.
 - Project report skills live under `.codex/skills/` and share the `healthpilot-report-` prefix: `healthpilot-report-what-next`, `healthpilot-report-root-cause`, `healthpilot-report-treatment-record`, `healthpilot-report-organ-system-health`, `healthpilot-report-mortality-risk`, and `healthpilot-report-doctor-appointment`.
 - Printable colour-coded medication tables use `healthpilot-medication-sheet`. The skill reconciles the current regimen for a selected live profile and writes a one-page PDF under `.output/<profile_slug>/treatment-record/` without modifying profile-linked source files.

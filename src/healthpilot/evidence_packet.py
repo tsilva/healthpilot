@@ -20,6 +20,7 @@ from healthpilot.evidence_hygiene import (
     visible_lines,
 )
 from healthpilot.jsonio import load_json
+from healthpilot.google_health import cached_evidence
 from healthpilot.lifestyle import LIFESTYLE_SOURCE_FIELDS
 from healthpilot.paths import expand_home, profiles_state_path
 from healthpilot.profile import ProfileContext
@@ -191,6 +192,7 @@ def _snapshot_id(
         "sources": {
             source_name: {
                 "status": metadata.get("status", "unknown"),
+                **({"coverage": metadata.get("details", {})} if source_name == "google_health" else {}),
                 "files": [
                     {
                         "relative_path": item.get("relative_path", ""),
@@ -258,6 +260,7 @@ def _source_freshness(source_snapshot: dict[str, Any]) -> dict[str, dict[str, An
             "path": metadata.get("path", ""),
             "latest_modified_at": metadata.get("latest_modified_at"),
             "sample": metadata.get("sample", []),
+            **({"details": metadata.get("details", {})} if source_name == "google_health" else {}),
         }
         for source_name, metadata in source_snapshot["sources"].items()
     }
@@ -749,6 +752,7 @@ def build_evidence_packet(
     exams = _summarize_exams(source_snapshot)
     genetics = _summarize_genetics(source_snapshot)
     lifestyle = _summarize_lifestyle(source_snapshot)
+    wearables = cached_evidence(profile_context)
     return {
         "schema_version": 2,
         "profile_slug": profile_context.slug,
@@ -765,12 +769,14 @@ def build_evidence_packet(
         "exams": exams,
         "genetics": genetics,
         "lifestyle": lifestyle,
+        "wearables": wearables,
         "citation_index": _citation_index(
             labs,
             health_log,
             exams,
             genetics,
             lifestyle,
+            wearables,
         ),
         "issue_memory": _issue_memory(
             profile_slug=profile_context.slug,

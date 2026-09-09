@@ -13,6 +13,7 @@ from healthpilot.evidence_hygiene import is_internal_path
 from healthpilot.paths import expand_home, profiles_dir
 
 SOURCE_FIELDS = (
+    "profile_context_md_path",
     "labs_path",
     "exams_path",
     "health_log_path",
@@ -20,7 +21,6 @@ SOURCE_FIELDS = (
     "schedule_md_path",
     "nutrition_md_path",
     "exercise_md_path",
-    "lifestyle_constraints_md_path",
 )
 
 

@@ -11,7 +11,7 @@ data_sources:
   schedule_md_path: "/path/to/daily-schedule.md"
   nutrition_md_path: "/path/to/nutrition-plan.md"
   exercise_md_path: "/path/to/exercise-plan.md"
-  lifestyle_constraints_md_path: "/path/to/lifestyle-constraints.md"
+  profile_context_md_path: "~/.config/healthpilot/profiles/myname.md"
 
   selfdecode:
     enabled: false

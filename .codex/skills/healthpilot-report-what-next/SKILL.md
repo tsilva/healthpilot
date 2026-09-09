@@ -116,7 +116,7 @@ The first substantive report section must be `Estado atual`, with:
 
 This section exists so the user can immediately confirm whether the report took the current status into account before reading the action plan.
 
-When lifestyle sources are configured, include them in source coverage and use `lifestyle_constraints_md_path` as the authority for conflicts between schedule, nutrition, exercise, symptom triggers, target weight changes, and preferences.
+When lifestyle sources are configured, include them in source coverage and use `profile_context_md_path` as the authority for conflicts between schedule, nutrition, exercise, symptom triggers, target weight changes, and preferences.
 
 ## Report Content Rules
 
@@ -227,11 +227,11 @@ Do not pad the report with generic lifestyle advice.
 
 If the profile configures lifestyle Markdown files:
 
-- read `lifestyle_constraints_md_path` before changing schedule, nutrition, or exercise plans
+- read `profile_context_md_path` before changing schedule, nutrition, or exercise plans
 - treat schedule, nutrition, and exercise Markdown files as current/default templates
 - do not edit or rewrite the source Markdown files
 - write regenerated draft plans under `.output/{profile_slug}/daily-plan/`
-- avoid copying the full sidecar constraints into generated plans; include only short conflict notes and source references
+- avoid copying the full personal context into generated plans; include only short conflict notes and source references
 - use `healthpilot daily-plan --profile <profile-name> --date YYYY-MM-DD` as deterministic support when it helps render a draft daily plan
 
 ## Prioritization Rules

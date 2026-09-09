@@ -70,6 +70,7 @@ def _write_profile(
         lifestyle_dir = profile_root / "lifestyle"
         lifestyle_dir.mkdir(parents=True, exist_ok=True)
         lifestyle_content = {
+            "profile_context_md_path": "# Goals\n- Target weight: 75 kg (proposed)\n- Foods to avoid: banana\n",
             "schedule_md_path": (
                 "# Daily Schedule\n"
                 "## Default Day\n"
@@ -87,21 +88,12 @@ def _write_profile(
                 "## Default Training Plan\n"
                 "- Gym workout 10:00-11:00\n"
             ),
-            "lifestyle_constraints_md_path": (
-                "# Lifestyle Constraints\n"
-                "## Global Precedence\n"
-                "1. Symptom triggers and medical constraints\n"
-                "## Nutrition Constraints\n"
-                "- Foods to avoid: banana\n"
-                "## Regeneration Rules\n"
-                "- What may be changed: generated drafts only\n"
-            ),
         }
         filenames = {
+            "profile_context_md_path": "profile-context.md",
             "schedule_md_path": "daily-schedule.md",
             "nutrition_md_path": "nutrition-plan.md",
             "exercise_md_path": "exercise-plan.md",
-            "lifestyle_constraints_md_path": "lifestyle-constraints.md",
         }
         for field, content in lifestyle_content.items():
             path = lifestyle_dir / filenames[field]
@@ -228,7 +220,7 @@ def _external_source_snapshot(paths: dict[str, Path]) -> dict[str, str]:
         "schedule_md_path",
         "nutrition_md_path",
         "exercise_md_path",
-        "lifestyle_constraints_md_path",
+        "profile_context_md_path",
     ):
         if field in paths:
             root_paths.append(paths[field])
@@ -419,7 +411,9 @@ def test_evidence_packet_creates_factual_packet_from_all_sources(tmp_path: Path)
     assert packet["source_freshness"]["exams_path"]["status"] == "available"
     assert packet["source_freshness"]["health_log_path"]["status"] == "available"
     assert packet["genetics"]["sample_rsids"] == ["rs123", "rs456"]
-    assert packet["lifestyle"]["lifestyle_constraints_md_path"]["status"] == "available"
+    assert packet["lifestyle"]["profile_context_md_path"]["status"] == "available"
+    assert packet["lifestyle"]["profile_context_md_path"]["status"] == "available"
+    assert "Target weight: 75 kg" in str(packet["lifestyle"]["profile_context_md_path"]["summary"])
     assert "2026-04-15" in packet["labs"]["latest_lab_dates"]
     assert any(item["label"] == "Hemoglobin" for item in packet["labs"]["abnormal_markers"])
     assert all(
@@ -877,7 +871,7 @@ def test_plan_captures_lifestyle_markdown_sources(tmp_path: Path) -> None:
     sources = json.loads((repo_root / ".state" / "profiles" / "test-user" / "sources.json").read_text())
     assert sources["sources"]["schedule_md_path"]["status"] == "available"
     assert "Default Day" in sources["sources"]["schedule_md_path"]["details"]["headings"]
-    constraint_snippets = sources["sources"]["lifestyle_constraints_md_path"]["details"]["relevant_snippets"]
+    constraint_snippets = sources["sources"]["profile_context_md_path"]["details"]["relevant_snippets"]
     assert any("Foods to avoid" in snippet for snippet in constraint_snippets)
 
     assert not list(
@@ -916,7 +910,7 @@ def test_plan_reports_lifestyle_markdown_source_statuses(tmp_path: Path) -> None
         assert sources["sources"]["schedule_md_path"]["status"] == "available"
         assert sources["sources"]["nutrition_md_path"]["status"] == "missing"
         assert sources["sources"]["exercise_md_path"]["status"] == "unreadable"
-        assert sources["sources"]["lifestyle_constraints_md_path"]["status"] == "available"
+        assert sources["sources"]["profile_context_md_path"]["status"] == "available"
     finally:
         paths["exercise_md_path"].chmod(0o644)
 
@@ -944,10 +938,10 @@ def test_plan_marks_lifestyle_sources_not_configured_by_default(tmp_path: Path) 
     assert sources["sources"]["schedule_md_path"]["status"] == "not configured"
     assert sources["sources"]["nutrition_md_path"]["status"] == "not configured"
     assert sources["sources"]["exercise_md_path"]["status"] == "not configured"
-    assert sources["sources"]["lifestyle_constraints_md_path"]["status"] == "not configured"
+    assert sources["sources"]["profile_context_md_path"]["status"] == "not configured"
 
 
-def test_daily_plan_applies_sidecar_constraints_without_copying_them(tmp_path: Path) -> None:
+def test_daily_plan_applies_profile_context_without_copying_them(tmp_path: Path) -> None:
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
     home_dir = tmp_path / "home"
@@ -977,9 +971,9 @@ def test_daily_plan_applies_sidecar_constraints_without_copying_them(tmp_path: P
     )
     report_text = report_path.read_text(encoding="utf-8")
     assert "banana" not in report_text
-    assert "excluded because they matched the sidecar constraint source" in report_text
+    assert "excluded because they matched the profile context" in report_text
     assert "Exercise template time overlaps a fixed schedule block" in report_text
-    assert "Sidecar constraints are read from `lifestyle_constraints_md_path`" in report_text
+    assert "Personal guidance is read from `profile_context_md_path`" in report_text
 
 
 def test_plan_migrates_legacy_flat_issue_state_per_profile(tmp_path: Path) -> None:

@@ -27,6 +27,16 @@ cp profiles/template.yaml.example ~/.config/healthpilot/profiles/myname.yaml
 
 Edit `~/.config/healthpilot/profiles/myname.yaml` so it points at the parser outputs and optional source files for that profile.
 
+Each person has a Markdown context file for goals, constraints, preferences, priorities, and other information that should guide their analysis:
+
+```bash
+cp profiles/context.md.example ~/.config/healthpilot/profiles/myname.md
+```
+
+Set `data_sources.profile_context_md_path` in their YAML to that file. For example, record a target weight with its status, date, and rationale under Goals, separate from measured weight. The agent reads the full file for every profile-specific analysis; deterministic evidence snapshots and packets include its coverage and summary. Daily drafts apply its supported food and schedule constraints. This is free-form personal guidance, not automated goal-progress tracking.
+
+The context file is read-only during analysis and is the single authority for personal goals, constraints, preferences, and priorities. Every live profile must link its own file. Missing or unconfigured context is reported explicitly. Schedule, nutrition, and exercise files remain operational templates governed by the context file; they are not separate stores of personal guidance.
+
 Then invoke the agent from this repo with a prompt like:
 
 ```text

@@ -12,13 +12,18 @@ from healthpilot.paths import expand_home
 
 
 LIFESTYLE_SOURCE_FIELDS = {
+    "profile_context_md_path",
     "schedule_md_path",
     "nutrition_md_path",
     "exercise_md_path",
-    "lifestyle_constraints_md_path",
 }
 
 SNIPPET_TERMS = (
+    "goal",
+    "prefer",
+    "budget",
+    "priority",
+    "context",
     "wake",
     "sleep",
     "meal",
@@ -236,7 +241,9 @@ def render_daily_plan(
     schedule_text = _source_text(evidence_snapshot, "schedule_md_path")
     nutrition_text = _source_text(evidence_snapshot, "nutrition_md_path")
     exercise_text = _source_text(evidence_snapshot, "exercise_md_path")
-    constraints_text = _source_text(evidence_snapshot, "lifestyle_constraints_md_path")
+    context_source = evidence_snapshot["sources"].get("profile_context_md_path", {})
+    constraint_source = "profile_context_md_path"
+    constraints_text = _source_text(evidence_snapshot, constraint_source)
 
     blocked_foods = _blocked_food_terms(constraints_text)
     schedule_items, _ = _candidate_lines(schedule_text)
@@ -246,9 +253,11 @@ def render_daily_plan(
     )
     exercise_items, _ = _candidate_lines(exercise_text)
     conflicts = _exercise_conflicts(schedule_text, exercise_text, constraints_text)
+    if context_source.get("status") != "available":
+        conflicts.append("Profile context is unavailable; personal goals, constraints and preferences could not be applied.")
     if removed_food_items:
         conflicts.append(
-            "One or more nutrition template items were excluded because they matched the sidecar constraint source."
+            "One or more nutrition template items were excluded because they matched the profile context."
         )
 
     sources = evidence_snapshot["sources"]
@@ -263,10 +272,10 @@ def render_daily_plan(
         "",
     ]
     for source_name in (
+        "profile_context_md_path",
         "schedule_md_path",
         "nutrition_md_path",
         "exercise_md_path",
-        "lifestyle_constraints_md_path",
     ):
         metadata = sources.get(source_name, {})
         path = metadata.get("path", "")
@@ -278,7 +287,7 @@ def render_daily_plan(
             "",
             "## Constraint Authority",
             "",
-            "- Sidecar constraints are read from `lifestyle_constraints_md_path` and are not copied into this draft.",
+            f"- Personal guidance is read from `{constraint_source}` and is not copied into this draft.",
             "- Food triggers and symptom constraints override macro or weight targets.",
             "- Fixed schedule blocks override meal and workout placement unless the source marks them as flexible.",
             "",

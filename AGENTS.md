@@ -46,7 +46,7 @@ At the start of a health-analysis session:
    - `data_sources.schedule_md_path`
    - `data_sources.nutrition_md_path`
    - `data_sources.exercise_md_path`
-   - `data_sources.lifestyle_constraints_md_path`
+   - `data_sources.profile_context_md_path`
    - `data_sources.selfdecode`
 5. If `~/.config/healthpilot/.env` exists and the task may need external API credentials, load it.
 6. Validate every configured data source path before analysis and classify each as:
@@ -58,6 +58,12 @@ At the start of a health-analysis session:
 8. Treat all profile-linked external files and directories as read-only.
 
 Repo-local `profiles/*.yaml` are development references only. They are not the canonical live runtime profiles.
+
+## Personal Profile Context
+
+Every live profile must configure `data_sources.profile_context_md_path`, a read-only Markdown source for goals (including target weight), constraints, preferences, priorities, and other personal context. Read the complete file at the start of every profile-specific analysis or report, regardless of report type; summary snippets are not a substitute. Validate and include its availability in source coverage. Keep goals distinct from measurements and clinical evidence, and distinguish proposed, active, achieved, and retired goals. Do not infer medical facts from preferences.
+
+This file is the single authority for personal goals, constraints, preferences, and priorities. If unavailable or unconfigured, report the gap. Current clinical evidence and safety constraints take precedence over aspirational goals; flag material conflicts. Schedule, nutrition, and exercise files are operational templates subordinate to this personal guidance, not separate goal stores. Never copy the complete personal context into reports. Live context files belong outside the repository; `profiles/context.md.example` is a blank template. Every live profile must link its own context file; do not borrow another person's guidance.
 
 ## Primary Interface
 
@@ -104,7 +110,7 @@ data_sources:
   schedule_md_path: "/path/to/daily-schedule.md"  # Optional
   nutrition_md_path: "/path/to/nutrition-plan.md"  # Optional
   exercise_md_path: "/path/to/exercise-plan.md"  # Optional
-  lifestyle_constraints_md_path: "/path/to/lifestyle-constraints.md"  # Optional
+  profile_context_md_path: "~/.config/healthpilot/profiles/myname.md"  # Optional
 
   selfdecode:
     enabled: false
@@ -370,19 +376,19 @@ Configured sources:
 - `{schedule_md_path}`: default schedule template
 - `{nutrition_md_path}`: default food plan template
 - `{exercise_md_path}`: default exercise plan template
-- `{lifestyle_constraints_md_path}`: durable constraints, targets, avoids, and precedence rules
+- `{profile_context_md_path}`: durable constraints, targets, avoids, and precedence rules
 
 Rules:
 
 - Validate existence and readability before use.
 - Treat all lifestyle Markdown files as read-only source inputs.
-- Use `lifestyle_constraints_md_path` as the authority when schedule, food, exercise, symptoms, weight goals, and preferences conflict.
-- Do not copy the full constraints into generated daily plans; reference the sidecar constraint source and include only brief conflict notes.
+- Use `profile_context_md_path` as the authority when schedule, food, exercise, symptoms, weight goals, and preferences conflict.
+- Do not copy the full constraints into generated daily plans; reference the personal context source and include only brief conflict notes.
 - Generated lifestyle drafts belong under `.output/{profile_slug}/daily-plan/`.
 
 Use strategy:
 
-- Start with the constraint sidecar to identify hard constraints, trigger foods, fixed schedule blocks, recovery limits, target weight changes, and regeneration rules.
+- Start with the personal context file to identify hard constraints, trigger foods, fixed schedule blocks, recovery limits, target weight changes, and regeneration rules.
 - Use the schedule, nutrition, and exercise Markdown files as current/default templates.
 - Preserve the template structure unless the constraint file allows or requires a change.
 - For deterministic draft rendering, use:
@@ -406,11 +412,11 @@ Use this lookup order by question type.
 1. Start with `{health_log_path}/health_log.md`.
 2. Narrow with `entries/*.processed.md`.
 3. Use `entries/*.raw.md` when exact wording or event detail matters.
-4. Use `{lifestyle_constraints_md_path}` for durable food triggers, schedule constraints, exercise constraints, and target-weight rules.
+4. Use `{profile_context_md_path}` for durable food triggers, schedule constraints, exercise constraints, and target-weight rules.
 
 ### Schedule, Nutrition, Exercise, And Daily Plan Optimization
 
-1. Start with `{lifestyle_constraints_md_path}` for conflict precedence and hard constraints.
+1. Start with `{profile_context_md_path}` for conflict precedence and hard constraints.
 2. Use `{schedule_md_path}` for the default day structure and fixed/flexible blocks.
 3. Use `{nutrition_md_path}` for the current default food plan.
 4. Use `{exercise_md_path}` for the current default training plan.

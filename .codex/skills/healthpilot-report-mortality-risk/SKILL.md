@@ -54,7 +54,7 @@ python3 -m healthpilot evidence-packet --profile <profile-name>
    - use `lab_specs.json` and source pages when units, ranges, or parser quality are ambiguous
    - inspect the complete standalone exam corpus layout, then retrieve diagnoses, pathology, imaging, endoscopy, sleep studies, screening, vital signs, anthropometrics, and surveillance findings
    - use `health_log.md`, relevant processed entries, and raw entries when exact timing or wording changes interpretation; retrieve smoking, alcohol, substance use, family history, medications, supplements, symptoms, infections, injuries, mental health, adherence, sleep, diet, activity, and longitudinal changes
-   - read all configured lifestyle Markdown sources, using the constraint sidecar as the conflict authority
+   - read all configured lifestyle Markdown sources, using the personal context file as the conflict authority
    - use raw 23andMe and cached SelfDecode data through targeted extraction for well-replicated variants that could materially change a candidate cause; do not treat an uncurated genome-wide scan as clinically interpretable evidence
 7. Record unavailable or stale sources and widen uncertainty. Shrink unsupported personalization toward the demographic baseline rather than assuming missing data means low risk.
 

@@ -500,3 +500,17 @@ When the user wants profile-specific questions that would improve future runs if
 ## Maintenance
 
 Keep [README.md](README.md) aligned with the current repo layout, runtime workflow, and observed data-source structures.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in GitHub Issues for `tsilva/healthpilot`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default five triage labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Use a single-context layout with root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.

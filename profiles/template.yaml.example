@@ -8,8 +8,7 @@ data_sources:
   exams_path: "/path/to/medical-exams-parser/output/"
   health_log_path: "/path/to/health-log-parser/output/"
   genetics_23andme_path: "/path/to/23andme_raw_data.txt"
-  schedule_md_path: "/path/to/daily-schedule.md"
-  nutrition_md_path: "/path/to/nutrition-plan.md"
+  nutrition_md_path: "~/.config/healthpilot/profiles/myname.food-plan.md"
   exercise_md_path: "/path/to/exercise-plan.md"
   profile_context_md_path: "~/.config/healthpilot/profiles/myname.md"
 

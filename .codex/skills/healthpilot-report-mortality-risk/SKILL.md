@@ -39,7 +39,7 @@ Do not mix these quantities. Add a separate all-cause horizon probability only w
 Consider every configured source category that is `available`; do not silently omit one. Add a source-coverage ledger showing status, freshness, material evidence used, and limitations.
 
 1. Load the selected live profile and calculate current age from `date_of_birth` on the report date.
-2. Validate and classify labs, exams, health log, genetics, schedule, nutrition, exercise, lifestyle constraints, and SelfDecode configuration.
+2. Validate and classify labs, exams, health log, genetics, nutrition, exercise, personal context, and SelfDecode configuration; check profile-linked calendar coverage when relevant.
 3. Generate or refresh the factual evidence packet when helpful:
 
 ```bash

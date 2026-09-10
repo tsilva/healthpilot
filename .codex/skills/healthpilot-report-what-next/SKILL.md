@@ -228,7 +228,7 @@ Do not pad the report with generic lifestyle advice.
 If the profile configures lifestyle Markdown files:
 
 - read `profile_context_md_path` before changing schedule, nutrition, or exercise plans
-- treat schedule, nutrition, and exercise Markdown files as current/default templates
+- treat nutrition and exercise Markdown files as current/default templates; retrieve routine timing through the profile-linked Google Calendar calendar
 - do not edit or rewrite the source Markdown files
 - write regenerated draft plans under `.output/{profile_slug}/daily-plan/`
 - avoid copying the full personal context into generated plans; include only short conflict notes and source references

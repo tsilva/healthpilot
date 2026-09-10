@@ -43,9 +43,9 @@ At the start of a health-analysis session:
    - `data_sources.exams_path`
    - `data_sources.health_log_path`
    - `data_sources.genetics_23andme_path`
-   - `data_sources.schedule_md_path`
    - `data_sources.nutrition_md_path`
    - `data_sources.exercise_md_path`
+   - `data_sources.routine_calendar`
    - `data_sources.profile_context_md_path`
    - `data_sources.selfdecode`
 5. If `~/.config/healthpilot/.env` exists and the task may need external API credentials, load it.
@@ -55,15 +55,39 @@ At the start of a health-analysis session:
    - `unreadable`
    - `not configured`
 7. Use those classifications in the answer. If a source is unavailable, say so explicitly.
-8. Treat all profile-linked external files and directories as read-only.
+8. Treat clinical source files and directories as read-only. Personal context and food plans have the explicit update rules below.
 
 Repo-local `profiles/*.yaml` are development references only. They are not the canonical live runtime profiles.
 
 ## Personal Profile Context
 
-Every live profile must configure `data_sources.profile_context_md_path`, a read-only Markdown source for goals (including target weight), constraints, preferences, priorities, and other personal context. Read the complete file at the start of every profile-specific analysis or report, regardless of report type; summary snippets are not a substitute. Validate and include its availability in source coverage. Keep goals distinct from measurements and clinical evidence, and distinguish proposed, active, achieved, and retired goals. Do not infer medical facts from preferences.
+Every live profile must configure `data_sources.profile_context_md_path`, a Markdown source for goals (including target weight), constraints, preferences, priorities, and other personal context. Read the complete file at the start of every profile-specific analysis or report, regardless of report type; summary snippets are not a substitute. Validate and include its availability in source coverage. Keep goals distinct from measurements and clinical evidence, and distinguish proposed, active, achieved, and retired goals. Do not infer medical facts from preferences.
 
-This file is the single authority for personal goals, constraints, preferences, and priorities. If unavailable or unconfigured, report the gap. Current clinical evidence and safety constraints take precedence over aspirational goals; flag material conflicts. Schedule, nutrition, and exercise files are operational templates subordinate to this personal guidance, not separate goal stores. Never copy the complete personal context into reports. Live context files belong outside the repository; `profiles/context.md.example` is a blank template. Every live profile must link its own context file; do not borrow another person's guidance.
+This file is the single authority for personal goals, constraints, preferences, and priorities. If unavailable or unconfigured, report the gap. Current clinical evidence and safety constraints take precedence over aspirational goals; flag material conflicts. Nutrition and exercise files are operational templates subordinate to this personal guidance, not separate goal stores. Never copy the complete personal context into reports. Live context files belong outside the repository; `profiles/context.md.example` is a blank template. Every live profile must link its own context file; do not borrow another person's guidance.
+
+## Routine Calendar
+
+Use the Google Calendar plugin for live schedule information. The selected profile YAML stores `data_sources.routine_calendar` with `calendar_id`, `name`, and `timezone`. Read this mapping when loading the profile; it is the authoritative calendar reference. The personal context file stores related preferences and constraints. List calendars to verify access, then search that exact calendar in an explicit relevant date window and timezone; finish pagination. Do not use the authenticated primary calendar or another person's calendar as a fallback. If no calendar is linked, report it as not configured; if access fails, report it as unavailable.
+
+Calendar blocks are planned commitments, not proof that activities occurred. Keep current commitments distinct from personal preferences: flag conflicts and fit proposed meals/exercise around the calendar instead of silently moving events. Read access does not authorize calendar edits. Record coverage dates; do not assume an empty day is free or extrapolate one week to all future dates. The Python evidence packet and daily draft do not fetch plugin calendar events; agent reports must retrieve them separately and state coverage. Never treat an old routine document as a fallback.
+
+## Personal Context and Food Plan Updates
+
+User statements adding or changing personal constraints, goals, or preferences must be persisted in the selected profile's `profile_context_md_path` during the same task. Preserve unrelated guidance; date and attribute changes, distinguish user instructions from record-derived hypotheses, and retire superseded items rather than leaving contradictions. Do not convert uncertain symptom associations into confirmed allergies or diagnoses. This is standing authorization to update personal context when the user supplies such guidance.
+
+Each profile's canonical food plan is `~/.config/healthpilot/profiles/{profile_slug}.food-plan.md`, linked by `data_sources.nutrition_md_path`. Bootstrap on request for that person; do not invent diets for other profiles. Use `profiles/food-plan.md.example` as a structural template. This is the current editable plan, not a dated report or a second store of constraints.
+
+Before every food-plan creation or change:
+
+1. Read the complete current personal context, validate sources, and review relevant current records and routine.
+2. Persist new user constraints in personal context first. Record-derived proposals must be clearly labelled and attributed.
+3. Apply that context to meals, portions, timing, substitutions, and any calorie or protein estimates. State assumptions and material unresolved conflicts; never silently disregard a constraint.
+4. Update the canonical food plan and its context-review date. If the user changes a food-relevant constraint and a plan exists, reconcile affected parts of the plan in the same task. Keep target weight authoritative in context; any repetition in the food plan is a dated derived value.
+5. Verify the YAML link, profile isolation, and consistency of the revised plan. Missing context must be resolved before writing a personalized plan.
+
+The user authorizes writes to these personal context and food-plan files when requesting their creation or revision. Ordinary analysis reads them without modification. Clinical records, parser outputs, genetics, and externally maintained exercise templates remain read-only. These rules override blanket read-only wording in report skills for explicitly requested context/food-plan updates only. Generated reports and experimental daily drafts still belong under `.output/`.
+
+For food-plan updates and printable nutrition menus, use [healthpilot-update-food-plan](.codex/skills/healthpilot-update-food-plan/SKILL.md). It reviews personal context, recent health logs, representative fresh Google Health data and routine, then updates the canonical Markdown and publishes a validated one-page PDF at `.output/{profile_slug}/daily-plan/food-plan.pdf`. This stable latest path is an exception to dated report filenames; dated food-plan archives are optional. Keep clinical reasoning and coverage in Markdown, not the food-only PDF.
 
 ## Primary Interface
 
@@ -107,8 +131,7 @@ data_sources:
   exams_path: "/path/to/exams-parser/output/"
   health_log_path: "/path/to/health-log-parser/output/"
   genetics_23andme_path: "/path/to/23andme_raw_data.txt"  # Optional
-  schedule_md_path: "/path/to/daily-schedule.md"  # Optional
-  nutrition_md_path: "/path/to/nutrition-plan.md"  # Optional
+  nutrition_md_path: "~/.config/healthpilot/profiles/myname.food-plan.md"  # When bootstrapped
   exercise_md_path: "/path/to/exercise-plan.md"  # Optional
   profile_context_md_path: "~/.config/healthpilot/profiles/myname.md"  # Optional
 
@@ -373,7 +396,6 @@ python3 -m healthpilot selfdecode-genotypes --profile <profile-name> --rsids rs1
 
 Configured sources:
 
-- `{schedule_md_path}`: default schedule template
 - `{nutrition_md_path}`: default food plan template
 - `{exercise_md_path}`: default exercise plan template
 - `{profile_context_md_path}`: durable constraints, targets, avoids, and precedence rules
@@ -381,7 +403,7 @@ Configured sources:
 Rules:
 
 - Validate existence and readability before use.
-- Treat all lifestyle Markdown files as read-only source inputs.
+- Read lifestyle Markdown inputs during analysis. Explicit context and canonical food-plan updates follow the update rules above.
 - Use `profile_context_md_path` as the authority when schedule, food, exercise, symptoms, weight goals, and preferences conflict.
 - Do not copy the full constraints into generated daily plans; reference the personal context source and include only brief conflict notes.
 - Generated lifestyle drafts belong under `.output/{profile_slug}/daily-plan/`.
@@ -389,7 +411,7 @@ Rules:
 Use strategy:
 
 - Start with the personal context file to identify hard constraints, trigger foods, fixed schedule blocks, recovery limits, target weight changes, and regeneration rules.
-- Use the schedule, nutrition, and exercise Markdown files as current/default templates.
+- Use the nutrition and exercise Markdown files as current/default templates.
 - Preserve the template structure unless the constraint file allows or requires a change.
 - For deterministic draft rendering, use:
 
@@ -417,7 +439,7 @@ Use this lookup order by question type.
 ### Schedule, Nutrition, Exercise, And Daily Plan Optimization
 
 1. Start with `{profile_context_md_path}` for conflict precedence and hard constraints.
-2. Use `{schedule_md_path}` for the default day structure and fixed/flexible blocks.
+2. Retrieve the selected profile’s routine calendar for the relevant dates via the Google Calendar plugin.
 3. Use `{nutrition_md_path}` for the current default food plan.
 4. Use `{exercise_md_path}` for the current default training plan.
 5. Cross-check against `health_log.md`, recent processed entries, labs, and exams when symptoms, recovery, GI tolerance, or objective markers could change the plan.

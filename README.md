@@ -35,7 +35,7 @@ cp profiles/context.md.example ~/.config/healthpilot/profiles/myname.md
 
 Set `data_sources.profile_context_md_path` in their YAML to that file. For example, record a target weight with its status, date, and rationale under Goals, separate from measured weight. The agent reads the full file for every profile-specific analysis; deterministic evidence snapshots and packets include its coverage and summary. Daily drafts apply its supported food and schedule constraints. This is free-form personal guidance, not automated goal-progress tracking.
 
-The context file is read-only during analysis and is the single authority for personal goals, constraints, preferences, and priorities. Every live profile must link its own file. Missing or unconfigured context is reported explicitly. Schedule, nutrition, and exercise files remain operational templates governed by the context file; they are not separate stores of personal guidance.
+The context file is read-only during ordinary analysis and is the single authority for personal goals, constraints, preferences, and priorities. Every live profile must link its own file. Missing or unconfigured context is reported explicitly. Nutrition and exercise files remain operational templates governed by the context file; they are not separate stores of personal guidance.
 
 Then invoke the agent from this repo with a prompt like:
 
@@ -44,6 +44,20 @@ Use the healthpilot-report-what-next skill for profile myname and write the refr
 ```
 
 Reports are bucketed under `.output/<profile_slug>/<report_type>/` and every filename starts with `<YYYY-MM-DD>-`. For example, what-next reports live at `.output/<profile_slug>/what-next/<YYYY-MM-DD>-<profile_slug>-action-plan.md`. Reports open with a decision layer, show changes since the prior comparable report, and keep source coverage and audit detail in an evidence appendix. What-next reports also include current status, a Now/Next/Later action board, and researched self-experiments when defensible.
+
+## Routine calendar
+
+Live schedules come from the Google Calendar plugin. Store each person's verified calendar ID, name, and timezone in their YAML profile under `data_sources.routine_calendar` (`calendar_id`, `name`, `timezone`). Personal context holds related preferences and constraints. The agent checks that calendar for relevant dates, including recurring instances and exceptions, before proposing meal or exercise times. Calendar changes require an explicit request. There is no schedule Markdown source or fallback.
+
+The Python CLI does not fetch plugin events. Its daily draft explicitly marks calendar coverage as unchecked; the agent retrieves calendar events separately. Missing access or an unlinked calendar must be reported, and one person's calendar must never be used for another profile.
+
+## Personal food plans
+
+Use `$healthpilot-update-food-plan` for a selected profile to review constraints, recent health-log symptoms, representative Google Health expenditure/weight/activity/sleep and routine, then update the menu and its one-page PDF. The [local skill](.codex/skills/healthpilot-update-food-plan/SKILL.md) keeps the latest PDF at **`.output/<profile_slug>/daily-plan/food-plan.pdf`**; this path stays the same across updates. Dated archives are optional. Missing wearable data is disclosed, and calorie targets remain provisional when the evidence cannot support adjustment.
+
+Each person's canonical food plan lives at `~/.config/healthpilot/profiles/<profile_slug>.food-plan.md`, linked through `data_sources.nutrition_md_path`. Ask the agent to bootstrap it for a selected profile. [The food-plan template](profiles/food-plan.md.example) supplies the structure; it is not a prescribed diet.
+
+Whenever you add or change a goal, constraint, or preference, the agent updates that person's context first. Food-relevant changes also update their existing food plan. Every food-plan revision reads the full context and checks meals, portions, timing, and substitutions against it. Goals remain authoritative in context, with any target copied into the plan clearly dated. These explicit edits are allowed; clinical records and parser outputs remain read-only. Other people's plans are created only when requested.
 
 ## Commands
 
@@ -67,7 +81,7 @@ Deprecated aliases such as `healthpilot intake`, `healthpilot review`, and `heal
 - Requires Python 3.11 or newer.
 - Runtime profiles live in `~/.config/healthpilot/profiles/`; repo-local `profiles/*.yaml` are development references only.
 - Optional API keys belong in `~/.config/healthpilot/.env`; `.env.example` documents the supported `NCBI_API_KEY`.
-- Profile-linked labs, exams, health-log, genetics, and lifestyle files are read-only source inputs.
+- Clinical records and parser outputs are read-only. Context and canonical food plans can be updated as described above; other lifestyle sources remain read-only.
 - Derived state lives under `.state/profiles/<profile_slug>/`; user-facing reports live under `.output/<profile_slug>/<report_type>/`.
 - Evidence packets use report-safe citation IDs in user-facing artifacts while retaining private path resolution under `.state/`.
 - The primary data sources are `labs-parser`, `medical-exams-parser`, `health-log-parser`, optional raw 23andMe data, optional SelfDecode genotype lookups, and optional lifestyle Markdown files.

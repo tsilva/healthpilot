@@ -70,13 +70,7 @@ def _write_profile(
         lifestyle_dir = profile_root / "lifestyle"
         lifestyle_dir.mkdir(parents=True, exist_ok=True)
         lifestyle_content = {
-            "profile_context_md_path": "# Goals\n- Target weight: 75 kg (proposed)\n- Foods to avoid: banana\n",
-            "schedule_md_path": (
-                "# Daily Schedule\n"
-                "## Default Day\n"
-                "- Fixed work 09:00-17:00\n"
-                "- Sleep 23:00-07:00\n"
-            ),
+            "profile_context_md_path": "# Goals\n- Target weight: 75 kg (proposed)\n- Foods to avoid: banana\n- Fixed work 09:00-17:00\n",
             "nutrition_md_path": (
                 "# Nutrition Plan\n"
                 "## Default Meal Plan\n"
@@ -91,7 +85,6 @@ def _write_profile(
         }
         filenames = {
             "profile_context_md_path": "profile-context.md",
-            "schedule_md_path": "daily-schedule.md",
             "nutrition_md_path": "nutrition-plan.md",
             "exercise_md_path": "exercise-plan.md",
         }
@@ -217,7 +210,6 @@ def _external_source_snapshot(paths: dict[str, Path]) -> dict[str, str]:
         paths["genetics_file"],
     ]
     for field in (
-        "schedule_md_path",
         "nutrition_md_path",
         "exercise_md_path",
         "profile_context_md_path",
@@ -869,8 +861,6 @@ def test_plan_captures_lifestyle_markdown_sources(tmp_path: Path) -> None:
 
     assert exit_code == 0
     sources = json.loads((repo_root / ".state" / "profiles" / "test-user" / "sources.json").read_text())
-    assert sources["sources"]["schedule_md_path"]["status"] == "available"
-    assert "Default Day" in sources["sources"]["schedule_md_path"]["details"]["headings"]
     constraint_snippets = sources["sources"]["profile_context_md_path"]["details"]["relevant_snippets"]
     assert any("Foods to avoid" in snippet for snippet in constraint_snippets)
 
@@ -907,7 +897,6 @@ def test_plan_reports_lifestyle_markdown_source_statuses(tmp_path: Path) -> None
 
         assert exit_code == 0
         sources = json.loads((repo_root / ".state" / "profiles" / "test-user" / "sources.json").read_text())
-        assert sources["sources"]["schedule_md_path"]["status"] == "available"
         assert sources["sources"]["nutrition_md_path"]["status"] == "missing"
         assert sources["sources"]["exercise_md_path"]["status"] == "unreadable"
         assert sources["sources"]["profile_context_md_path"]["status"] == "available"
@@ -935,7 +924,6 @@ def test_plan_marks_lifestyle_sources_not_configured_by_default(tmp_path: Path) 
 
     assert exit_code == 0
     sources = json.loads((repo_root / ".state" / "profiles" / "test-user" / "sources.json").read_text())
-    assert sources["sources"]["schedule_md_path"]["status"] == "not configured"
     assert sources["sources"]["nutrition_md_path"]["status"] == "not configured"
     assert sources["sources"]["exercise_md_path"]["status"] == "not configured"
     assert sources["sources"]["profile_context_md_path"]["status"] == "not configured"
@@ -974,6 +962,8 @@ def test_daily_plan_applies_profile_context_without_copying_them(tmp_path: Path)
     assert "excluded because they matched the profile context" in report_text
     assert "Exercise template time overlaps a fixed schedule block" in report_text
     assert "Personal guidance is read from `profile_context_md_path`" in report_text
+    assert "Live calendar events are not retrieved" in report_text
+    assert "## Schedule Draft" not in report_text
 
 
 def test_plan_migrates_legacy_flat_issue_state_per_profile(tmp_path: Path) -> None:

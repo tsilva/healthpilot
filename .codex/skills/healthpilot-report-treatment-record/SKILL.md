@@ -46,7 +46,7 @@ python3 -m healthpilot evidence-packet --profile <profile-name>
 4. Read relevant `entries/*.processed.md` and targeted `entries/*.raw.md` to establish starts, dose changes, adherence, PRN use, response, adverse effects, stops, replacements, restarts, and whether a planned trial began.
 5. Inspect the standalone exam corpus for medication lists, prescriptions, treatment plans, devices, therapies, monitoring, and documented discontinuations. Treat copied visit lists as evidence, not automatic proof of use.
 6. Use `entries/*.exams.md` as supporting context, not a substitute for the standalone exam corpus.
-7. Read configured nutrition, exercise, schedule, and lifestyle-constraint Markdown. Treat templates as intended plans unless current evidence supports actual use.
+7. Read configured nutrition, exercise, and personal-context Markdown, and retrieve the profile-linked routine calendar when timing matters. Treat templates as intended plans unless current evidence supports actual use.
 8. Use labs only for treatment monitoring, response, or a treatment-linked timeline. A lab alone does not prove treatment use.
 9. Use genetics only when the record explicitly links it to treatment selection or dosing.
 10. Read `.state/profiles/{profile_slug}/evidence-packet.json`, `issues.json`, and `actions.json` when helpful, but treat planned actions as planned until canonical evidence confirms execution.

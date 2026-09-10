@@ -4,7 +4,9 @@ Apply this contract to every user-facing Markdown report. Doctor-appointment PDF
 
 ## Personal context
 
-For every profile and report type, read the complete `data_sources.profile_context_md_path` file before analysis. It is the single source of personal goals, constraints, preferences, priorities, and other guidance. Include its availability in source coverage. Treat absent context as unspecified, never as an absence of constraints. Operational schedule, nutrition, and exercise templates must respect it. Separate goals and preferences from observed clinical facts; clinical evidence and safety constraints take precedence over aspirational targets. Use only relevant context in the report and never reproduce the whole file.
+For every profile and report type, read the complete `data_sources.profile_context_md_path` file before analysis. It is the single source of personal goals, constraints, preferences, priorities, and other guidance. Include its availability in source coverage. Treat absent context as unspecified, never as an absence of constraints. Operational nutrition and exercise templates must respect it. Separate goals and preferences from observed clinical facts; clinical evidence and safety constraints take precedence over aspirational targets. Use only relevant context in the report and never reproduce the whole file.
+
+For timing-sensitive reports, retrieve the selected profile’s live calendar via the Google Calendar plugin as described in `AGENTS.md`. State the calendar coverage window or access gap separately from the local evidence packet; planned events are not observed adherence.
 
 ## Output language
 

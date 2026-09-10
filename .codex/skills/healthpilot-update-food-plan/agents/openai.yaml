@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update food plan"
+  short_description: "Refresh a personal food plan and its one-page PDF"
+  default_prompt: "Use $healthpilot-update-food-plan to review my constraints, recent health log and representative Google Health data, update my food plan, and return the latest PDF at its stable path."

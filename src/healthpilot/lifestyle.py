@@ -13,7 +13,6 @@ from healthpilot.paths import expand_home
 
 LIFESTYLE_SOURCE_FIELDS = {
     "profile_context_md_path",
-    "schedule_md_path",
     "nutrition_md_path",
     "exercise_md_path",
 }
@@ -206,10 +205,10 @@ def _intervals_from_text(text: str, *, required_terms: tuple[str, ...]) -> list[
     return intervals
 
 
-def _exercise_conflicts(schedule_text: str, exercise_text: str, constraints_text: str) -> list[str]:
+def _exercise_conflicts(exercise_text: str, constraints_text: str) -> list[str]:
     conflicts: list[str] = []
     fixed_schedule = _intervals_from_text(
-        schedule_text + "\n" + constraints_text,
+        constraints_text,
         required_terms=("fixed", "work", "sleep", "cannot move", "busy"),
     )
     exercise_intervals = _intervals_from_text(
@@ -238,7 +237,6 @@ def render_daily_plan(
     target_date: str,
     evidence_snapshot: dict[str, Any],
 ) -> str:
-    schedule_text = _source_text(evidence_snapshot, "schedule_md_path")
     nutrition_text = _source_text(evidence_snapshot, "nutrition_md_path")
     exercise_text = _source_text(evidence_snapshot, "exercise_md_path")
     context_source = evidence_snapshot["sources"].get("profile_context_md_path", {})
@@ -246,13 +244,12 @@ def render_daily_plan(
     constraints_text = _source_text(evidence_snapshot, constraint_source)
 
     blocked_foods = _blocked_food_terms(constraints_text)
-    schedule_items, _ = _candidate_lines(schedule_text)
     nutrition_items, removed_food_items = _candidate_lines(
         nutrition_text,
         blocked_terms=blocked_foods,
     )
     exercise_items, _ = _candidate_lines(exercise_text)
-    conflicts = _exercise_conflicts(schedule_text, exercise_text, constraints_text)
+    conflicts = _exercise_conflicts(exercise_text, constraints_text)
     if context_source.get("status") != "available":
         conflicts.append("Profile context is unavailable; personal goals, constraints and preferences could not be applied.")
     if removed_food_items:
@@ -273,7 +270,6 @@ def render_daily_plan(
     ]
     for source_name in (
         "profile_context_md_path",
-        "schedule_md_path",
         "nutrition_md_path",
         "exercise_md_path",
     ):
@@ -291,11 +287,11 @@ def render_daily_plan(
             "- Food triggers and symptom constraints override macro or weight targets.",
             "- Fixed schedule blocks override meal and workout placement unless the source marks them as flexible.",
             "",
-            "## Schedule Draft",
+            "## Calendar Coverage",
             "",
         ]
     )
-    lines.extend(f"- {item}" for item in schedule_items[:8] or ["No schedule template lines available."])
+    lines.append("- Live calendar events are not retrieved by this CLI draft; verify timing against the profile-linked calendar through the Google Calendar plugin.")
     lines.extend(["", "## Nutrition Draft", ""])
     lines.extend(f"- {item}" for item in nutrition_items[:8] or ["No nutrition template lines available after applying constraints."])
     lines.extend(["", "## Exercise Draft", ""])

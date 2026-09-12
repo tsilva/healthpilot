@@ -369,6 +369,11 @@ def test_weight_sleep_activity_and_calories_use_verified_api_shapes(tmp_path, mo
         requests.append(request)
         if "/weight/" in request.full_url:
             body = {"dataPoints": [{"weight": {"sampleTime": {"physicalTime": "2026-01-05T08:00:00Z", "utcOffset": "0s"}, "weightGrams": 75000}}]}
+        elif "/body-fat/" in request.full_url:
+            params = urllib.parse.parse_qs(urllib.parse.urlsplit(request.full_url).query)
+            assert "body_fat.sample_time.civil_time" in params["filter"][0]
+            assert params["dataSourceFamily"] == ["users/me/dataSourceFamilies/all-sources"]
+            body = {"dataPoints": [{"bodyFat": {"sampleTime": {"physicalTime": "2026-01-05T08:00:00Z", "utcOffset": "0s"}, "percentage": 22.9}}]}
         elif "/sleep/" in request.full_url:
             params = urllib.parse.parse_qs(urllib.parse.urlsplit(request.full_url).query)
             assert params["pageSize"] == ["25"]
@@ -393,7 +398,7 @@ def test_weight_sleep_activity_and_calories_use_verified_api_shapes(tmp_path, mo
         return io.BytesIO(json.dumps(body).encode())
 
     monkeypatch.setattr("urllib.request.urlopen", network)
-    for metric, key, expected in [("weight", "weightGrams", 75000), ("sleep", "summary", {"minutesAsleep": "450"}),
+    for metric, key, expected in [("body-fat", "percentage", 22.9), ("weight", "weightGrams", 75000), ("sleep", "summary", {"minutesAsleep": "450"}),
                                    ("steps", "countSum", "7500"), ("calories", "kcalSum", 2300)]:
         result = query(args, capsys, metric=metric)
         assert result["status"] == "available"
@@ -401,7 +406,7 @@ def test_weight_sleep_activity_and_calories_use_verified_api_shapes(tmp_path, mo
         assert len(records) == 1
         assert records[0]["data"][key] == expected
         assert records[0]["observed_at"] == "2026-01-05"
-    assert len(requests) == 4
+    assert len(requests) == 5
 
 
 def test_revoked_authorization_preserves_cache_and_requests_reconnection(tmp_path, monkeypatch, capsys):

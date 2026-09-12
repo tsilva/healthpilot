@@ -36,6 +36,7 @@ METRICS = {
     "hrv": Metric("daily-heart-rate-variability", "dailyHeartRateVariability", "date", HEALTH_SCOPES[0], 31, "HRV: milliseconds; non-REM heart rate: beats/minute; entropy: dimensionless"),
     "resting-heart-rate": Metric("daily-resting-heart-rate", "dailyRestingHeartRate", "date", HEALTH_SCOPES[0], 31, "beats/minute"),
     "heart-rate": Metric("heart-rate", "heartRate", "sample_time.civil_time", HEALTH_SCOPES[0], 1, "beats/minute"),
+    "body-fat": Metric("body-fat", "bodyFat", "sample_time.civil_time", HEALTH_SCOPES[0], 31, "percent (estimated body fat)"),
     "weight": Metric("weight", "weight", "sample_time.civil_time", HEALTH_SCOPES[0], 31, "grams"),
     "sleep": Metric("sleep", "sleep", "interval.civil_end_time", HEALTH_SCOPES[2], 7, "summary durations: minutes; source timestamps retained"),
     "steps": Metric("steps", "steps", "", HEALTH_SCOPES[1], 31, "count", True),

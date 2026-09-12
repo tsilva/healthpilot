@@ -39,6 +39,7 @@ healthpilot google-health --profile myname --metrics hrv --start 2026-01-01 --en
 | `hrv` | `daily-heart-rate-variability`, reconcile | HRV milliseconds; optional non-REM bpm and entropy remain distinct |
 | `resting-heart-rate` | `daily-resting-heart-rate`, reconcile | beats/minute |
 | `heart-rate` | `heart-rate`, reconcile | beats/minute, individual sample timestamps |
+| `body-fat` | `body-fat`, reconcile | estimated body fat, percent |
 | `weight` | `weight`, reconcile | grams |
 | `sleep` | `sleep`, reconcile | summary durations in minutes; session and stage timestamps |
 | `steps` | `steps`, dailyRollUp | step count |

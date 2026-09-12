@@ -15,6 +15,55 @@ from reportlab.platypus import Paragraph, Table, TableStyle
 from pypdf import PdfReader
 
 
+def draw_swaps(c, spec, page_w, page_h, para):
+    """Draw the optional, explicitly requested exchange sheet on one page."""
+    y = page_h - 40
+
+    def text(value, gap=8):
+        nonlocal y
+        p = para(value)
+        _, height = p.wrap(515, page_h)
+        if y - height < 40:
+            raise ValueError('Swaps do not fit one page at readable size')
+        p.drawOn(c, 40, y - height)
+        y -= height + gap
+
+    text(spec['title'])
+    if spec.get('intro'):
+        text(spec['intro'])
+    sections = spec.get('sections')
+    if not isinstance(sections, list) or not sections:
+        raise ValueError('Swaps require nonempty sections')
+    for section in sections:
+        text(section['title'])
+        columns, rows = section['columns'], section['rows']
+        widths = section['widths']
+        if (not columns or not rows or len(widths) != len(columns)
+                or any(type(w) not in (int, float) or w <= 16 for w in widths)
+                or abs(sum(widths) - 515) > .01
+                or any(len(row) != len(columns) for row in rows)):
+            raise ValueError('Invalid swap table columns, rows or widths')
+        cells = [[para(v, index == 0) for v in row]
+                 for index, row in enumerate([columns] + rows)]
+        table = Table(cells, colWidths=widths)
+        table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), .4, colors.HexColor('#B2C4BE')),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#E5EFEB')),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+        ]))
+        _, height = table.wrap(515, page_h)
+        if y - height < 40:
+            raise ValueError('Swaps do not fit one page at readable size')
+        table.drawOn(c, 40, y - height)
+        y -= height + 12
+    for note in spec.get('notes', []):
+        text(note)
+
+
 def render(spec, output):
     style = ParagraphStyle('cell', fontName='Helvetica', fontSize=9, leading=11)
     widths = [193, 242, 80]
@@ -109,10 +158,15 @@ def render(spec, output):
         table.drawOn(c, 40, bottom)
         c.setFont('Helvetica', 7.5)
         c.drawString(40, bottom - 14, footer)
+        swaps = spec.get('swaps')
+        if swaps is not None:
+            c.showPage()
+            draw_swaps(c, swaps, page_w, page_h, para)
         c.save()
         reader = PdfReader(temp)
-        if len(reader.pages) != 1:
-            raise ValueError('Expected exactly one page')
+        expected_pages = 2 if swaps is not None else 1
+        if len(reader.pages) != expected_pages:
+            raise ValueError(f'Expected exactly {expected_pages} pages')
         os.replace(temp, output)
     finally:
         if os.path.exists(temp):
@@ -126,4 +180,4 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     total = render(json.loads(args.spec.read_text()), args.output)
-    print(f'Validated one page; food total {total} kcal; {args.output.resolve()}')
+    print(f'Validated {len(PdfReader(args.output).pages)} page(s); food total {total} kcal; {args.output.resolve()}')

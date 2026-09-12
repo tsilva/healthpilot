@@ -87,7 +87,7 @@ Before every food-plan creation or change:
 
 The user authorizes writes to these personal context and food-plan files when requesting their creation or revision. Ordinary analysis reads them without modification. Clinical records, parser outputs, genetics, and externally maintained exercise templates remain read-only. These rules override blanket read-only wording in report skills for explicitly requested context/food-plan updates only. Generated reports and experimental daily drafts still belong under `.output/`.
 
-For food-plan updates and printable nutrition menus, use [healthpilot-update-food-plan](.codex/skills/healthpilot-update-food-plan/SKILL.md). It reviews personal context, recent health logs, representative fresh Google Health data and routine, then updates the canonical Markdown and publishes a validated one-page PDF at `.output/{profile_slug}/daily-plan/food-plan.pdf`. This stable latest path is an exception to dated report filenames; dated food-plan archives are optional. Keep clinical reasoning and coverage in Markdown, not the food-only PDF.
+For food-plan updates and printable nutrition menus, use [healthpilot-update-food-plan](.codex/skills/healthpilot-update-food-plan/SKILL.md). It reviews personal context, recent health logs, representative fresh Google Health data and routine, then updates the canonical Markdown and publishes a validated one-page menu (plus a second swap page when requested) at `.output/{profile_slug}/daily-plan/food-plan.pdf`. This stable latest path is an exception to dated report filenames; dated food-plan archives are optional. Keep clinical reasoning and coverage in Markdown, not the food-only PDF.
 
 ## Primary Interface
 
@@ -339,7 +339,7 @@ Google Health is an optional runtime connection, discovered by canonical live pr
 
 - Use `healthpilot google-health-status --profile <slug>` to inspect the connection locally. Never copy account identity, credentials, or runtime paths into reports.
 - For relevant reports or ad hoc questions, retrieve the needed metric/date window with `healthpilot google-health --profile <slug> --metrics <metrics> --start YYYY-MM-DD --end YYYY-MM-DD`, or use `--wearable-metrics`, `--wearable-start`, and `--wearable-end` on `plan` / `evidence-packet`.
-- Supported metric names: `hrv`, `resting-heart-rate`, `heart-rate`, `weight`, `sleep`, `steps`, and `calories`. Choose detailed heart rate only for a relevant episode/window.
+- Supported metric names: `hrv`, `resting-heart-rate`, `heart-rate`, `weight`, `body-fat`, `sleep`, `steps`, and `calories`. Choose detailed heart rate only for a relevant episode/window.
 - Explicit retrieval refreshes requested dates in the latest seven calendar days. Add `--refresh` (or `--wearable-refresh` on report-support commands) for historical corrections.
 - The normal evidence packet exposes `wearables`, safe citation IDs, and `google_health` source coverage. Without retrieval flags it reuses only the last selected cached window. Inspect dates, metrics, missing days and stale status; do not assume other history is covered. Retrieve relevant dates again for fresh reports.
 - Consider this source in every report when relevant, including unavailable/partial/stale coverage in the evidence appendix. Preserve source time/units, assign sleep to its source waking date, and do not double-count reconciled calorie totals. Wearable measurements alone do not establish a diagnosis.

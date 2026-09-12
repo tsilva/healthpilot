@@ -53,7 +53,9 @@ The Python CLI does not fetch plugin events. Its daily draft explicitly marks ca
 
 ## Personal food plans
 
-Use `$healthpilot-update-food-plan` for a selected profile to review constraints, recent health-log symptoms, representative Google Health expenditure/weight/activity/sleep and routine, then update the menu and its one-page PDF. The [local skill](.codex/skills/healthpilot-update-food-plan/SKILL.md) keeps the latest PDF at **`.output/<profile_slug>/daily-plan/food-plan.pdf`**; this path stays the same across updates. Dated archives are optional. Missing wearable data is disclosed, and calorie targets remain provisional when the evidence cannot support adjustment.
+Use `$healthpilot-update-food-plan` for a selected profile to review constraints, recent health-log symptoms, representative Google Health expenditure/weight/activity/sleep and routine, then update the menu and its PDF: one menu page, plus a second swap page when requested. The [local skill](.codex/skills/healthpilot-update-food-plan/SKILL.md) keeps the latest PDF at **`.output/<profile_slug>/daily-plan/food-plan.pdf`**; this path stays the same across updates. Cooked foods use ready-to-eat edible weights and matching nutrition calculations; variable-water recipes specify a final cooked batch weight. Dated archives are optional. Missing wearable data is disclosed, and calorie targets remain provisional when the evidence cannot support adjustment.
+
+Standing email instructions belong in the selected profile's personal context. When authorized, each skill run emails the validated PDF to that fixed recipient and applies the Gmail label `Food Plan`. The subject and body explain what changed compared with the saved pre-run plan and which dated measurements, records, or preferences support the decision, including when portions remain unchanged. Delivery failures are reported separately from successful local publication.
 
 Each person's canonical food plan lives at `~/.config/healthpilot/profiles/<profile_slug>.food-plan.md`, linked through `data_sources.nutrition_md_path`. Ask the agent to bootstrap it for a selected profile. [The food-plan template](profiles/food-plan.md.example) supplies the structure; it is not a prescribed diet.
 
@@ -99,3 +101,5 @@ Deprecated aliases such as `healthpilot intake`, `healthpilot review`, and `heal
 ## License
 
 [MIT](LICENSE)
+
+Body-composition reviews can retrieve `body-fat` alongside `weight` through Google Health. Body-fat percentages are scale estimates; assess multi-week trends with strength, waist and symptoms rather than treating daily changes as muscle loss.
